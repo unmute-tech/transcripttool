@@ -1,0 +1,197 @@
+import kotlinx.datetime.Instant;
+
+
+
+-----------
+-- TASKS --
+-----------
+allTasks:
+SELECT * FROM Task_Entity ORDER BY created_at DESC;
+
+getTask:
+SELECT * FROM Task_Entity
+WHERE id = :id;
+
+nextTask:
+SELECT * FROM Task_Entity WHERE submitted_at ISNULL AND id != :id ORDER BY updated_at DESC LIMIT 1;
+
+getTaskByRemoteId:
+SELECT * FROM Task_Entity
+WHERE remote_id = :remote_id;
+
+deleteTask:
+DELETE FROM Task_Entity
+WHERE id = :id;
+
+insertTask:
+INSERT INTO Task_Entity(
+id,
+remote_id,
+remote_url,
+length,
+region_length,
+provenance,
+display_name,
+created_at,
+updated_at,
+-- latest_transcript, -- using default values
+local_entity
+-- submitted_transcript, -- using default values
+-- active_region, -- using default values
+-- completed_at, -- using defaults
+-- submitted_at -- using null defaults
+)
+VALUES( ?,?,?,?,?,?,?,?,?,?);
+
+
+updateSubmittedTranscript:
+UPDATE Task_Entity
+SET submitted_transcript = :transcript
+WHERE id=:id;
+
+markTaskUploaded:
+UPDATE Task_Entity
+SET
+updated_at = (SELECT * FROM timestamp),
+submitted_at = (SELECT * FROM timestamp)
+WHERE id=:id;
+
+
+rejectTask:
+UPDATE Task_Entity
+SET reject_reason = :reject_reason,
+updated_at = (SELECT * FROM timestamp),
+completed_at = (SELECT * FROM timestamp)
+WHERE id=:id;
+
+completeTask:
+UPDATE Task_Entity SET
+difficulty = :difficulty,
+updated_at = (SELECT * FROM timestamp),
+completed_at = (SELECT * FROM timestamp)
+WHERE id=:id;
+
+
+addLocalEntityToTask:
+UPDATE Task_Entity
+SET local_entity = :localid,
+updated_at = (SELECT * FROM timestamp)
+WHERE id=:id;
+
+
+
+
+-------------
+-- REGIONS --
+-------------
+
+getAllRegions:
+SELECT * FROM Region_Entity
+WHERE task_id = :id;
+
+getActiveRegions:
+SELECT * FROM Region_Entity
+WHERE task_id = :id AND active = 1;
+
+markRegionsInActive:
+UPDATE Region_Entity
+SET active = 0
+WHERE task_id = :id AND active = 1;
+
+getRegion:
+SELECT * FROM Region_Entity
+WHERE id = :id;
+
+deleteRegion:
+DELETE FROM Region_Entity
+WHERE id = :id;
+
+insertRegion:
+INSERT INTO Region_Entity VALUES (?,?,?,?,?,?);
+
+
+--------------------
+-- TRANSCRIPTIONS --
+--------------------
+
+getPartialTranscripts:
+SELECT * FROM Partial_Transcript_Entity
+WHERE task_id = :id ORDER BY updated_at DESC;
+
+getPartialTranscript:
+SELECT * FROM Partial_Transcript_Entity
+WHERE id = :id;
+
+getLatestPartialTranscript:
+SELECT * FROM Partial_Transcript_Entity
+WHERE task_id = :id ORDER BY updated_at DESC LIMIT 1;
+
+insertPartialTranscription:
+INSERT INTO Partial_Transcript_Entity(
+id,
+task_id,
+region_id,
+content,
+updated_at
+) VALUES (?,?,?,?,?);
+
+updatePartialTranscription:
+UPDATE Partial_Transcript_Entity
+SET content = :transcript WHERE id=:id;
+
+-----------
+-- FILES --
+-----------
+
+insertFileInfo:
+INSERT INTO File_Info(
+id,
+extension,
+-- mime_type,
+orig_uri,
+created_at,
+updated_at,
+orig_display_name
+) VALUES (?,?,?,?,?,?);
+
+
+getFileInfo:
+SELECT * FROM File_Info
+WHERE id = :id;
+
+deleteFileInfo:
+DELETE FROM File_Info
+WHERE id = :id;
+
+getFileName:
+SELECT IFNULL(orig_display_name, DATE(created_at,'unixepoch','localtime')) || '-TR-' || id || '.' || extension AS filename
+FROM File_Info
+WHERE id = :id;
+
+insertLocalEntity:
+INSERT INTO Local_Entity(
+id,
+file_id,
+path,
+created_at,
+updated_at
+) VALUES (?,?,?,?,?);
+
+
+getLocalEntity:
+SELECT * FROM Local_Entity
+WHERE id = :id;
+
+
+-----------
+-- UTILS --
+-----------
+
+
+rowid:
+SELECT last_insert_rowid();
+
+-- myQueries.transaction {
+--   myQueries.insert(...)
+--   val id = myQueries.rowid()
+-- }

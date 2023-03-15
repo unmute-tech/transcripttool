@@ -1,0 +1,104 @@
+import io.reitmaier.transcripttool.core.data.domain.FileId;
+import io.reitmaier.transcripttool.core.data.domain.LocalId;
+import io.reitmaier.transcripttool.core.data.domain.PartialTranscriptId;
+import io.reitmaier.transcripttool.core.data.domain.RegionId;
+import io.reitmaier.transcripttool.core.data.domain.RemoteId;
+import io.reitmaier.transcripttool.core.data.domain.SavedTranscript;
+import io.reitmaier.transcripttool.core.data.domain.SubmittedTranscript;
+import io.reitmaier.transcripttool.core.data.domain.TaskId;
+import io.reitmaier.transcripttool.core.data.domain.TaskProvenance;
+import kotlinx.datetime.Instant;
+
+CREATE TABLE IF NOT EXISTS File_Info(
+    id INTEGER AS FileId NOT NULL PRIMARY KEY AUTOINCREMENT,
+    extension TEXT NOT NULL,
+--     mime_type TEXT NOT NULL,
+    orig_uri TEXT NOT NULL,
+    created_at INTEGER AS Instant NOT NULL,
+    updated_at INTEGER AS Instant NOT NULL,
+
+    orig_display_name TEXT DEFAULT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS Local_Entity (
+    id INTEGER AS LocalId NOT NULL PRIMARY KEY AUTOINCREMENT,
+    file_id INTEGER AS FileId NOT NULL REFERENCES File_Info(id),
+    path TEXT NOT NULL,
+    created_at INTEGER AS Instant NOT NULL,
+    updated_at INTEGER AS Instant NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Task_Entity (
+    id INTEGER AS TaskId NOT NULL PRIMARY KEY AUTOINCREMENT,
+    remote_id INTEGER AS RemoteId NOT NULL,
+    remote_url TEXT NOT NULL,
+    length INTEGER NOT NULL,
+    region_length INTEGER NOT NULL,
+    provenance TEXT AS TaskProvenance NOT NULL,
+    display_name TEXT NOT NULL,
+
+    created_at INTEGER AS Instant NOT NULL,
+    updated_at INTEGER AS Instant NOT NULL,
+
+    latest_transcript TEXT AS SavedTranscript NOT NULL DEFAULT '',
+
+    local_entity INTEGER AS LocalId REFERENCES Local_Entity(id),
+    submitted_transcript TEXT AS SubmittedTranscript DEFAULT NULL,
+
+--     active_region INTEGER AS RegionId REFERENCES Region_Entity(id),
+    completed_at INTEGER AS Instant DEFAULT NULL,
+    submitted_at INTEGER AS Instant DEFAULT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Region_Entity (
+    id INTEGER AS RegionId NOT NULL PRIMARY KEY AUTOINCREMENT,
+    task_id INTEGER AS TaskId NOT NULL REFERENCES Task_Entity(id),
+    start INTEGER NOT NULL,
+    end INTEGER NOT NULL,
+    active INTEGER AS Boolean NOT NULL DEFAULT 1,
+    play_count INTEGER NOT NULL DEFAULT 0
+);
+
+
+CREATE TABLE IF NOT EXISTS Partial_Transcript_Entity (
+    id INTEGER AS PartialTranscriptId NOT NULL PRIMARY KEY AUTOINCREMENT,
+    task_id INTEGER AS TaskId NOT NULL REFERENCES Task_Entity(id),
+    region_id INTEGER AS RegionId NOT NULL REFERENCES Region_Entity(id),
+    content TEXT AS SavedTranscript NOT NULL,
+    updated_at INTEGER AS Instant NOT NULL
+);
+
+-----------
+-- VIEWS --
+-----------
+CREATE VIEW IF NOT EXISTS timestamp AS
+SELECT strftime('%s', 'now') * 1000 + strftime('%f', 'now') * 1000 % 1000;
+-- SELECT strftime('%s','now');
+-- SELECT datetime('now');
+
+--------------
+-- TRIGGERS --
+--------------
+
+CREATE TRIGGER IF NOT EXISTS update_lastest_transcript_on_insert
+  AFTER INSERT ON Partial_Transcript_Entity
+BEGIN
+  UPDATE Task_Entity SET
+    latest_transcript = new.content,
+    updated_at = (SELECT * FROM timestamp)
+  WHERE id = new.task_id;
+END;
+
+
+CREATE TRIGGER IF NOT EXISTS update_lastest_transcript_on_update
+  AFTER UPDATE ON Partial_Transcript_Entity
+BEGIN
+  UPDATE Task_Entity SET
+    latest_transcript = new.content,
+    updated_at = (SELECT * FROM timestamp)
+  WHERE id = new.task_id;
+  UPDATE Partial_Transcript_Entity SET
+    updated_at = (SELECT * FROM timestamp)
+  WHERE id = new.id;
+END;

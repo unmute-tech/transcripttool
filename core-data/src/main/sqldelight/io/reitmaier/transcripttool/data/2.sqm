@@ -1,0 +1,6 @@
+import io.reitmaier.transcripttool.core.data.domain.Confidence;
+import io.reitmaier.transcripttool.core.data.domain.Difficulty;
+
+
+ALTER TABLE Task_Entity ADD COLUMN difficulty TEXT AS Difficulty;
+ALTER TABLE Task_Entity ADD COLUMN confidence TEXT AS Confidence;

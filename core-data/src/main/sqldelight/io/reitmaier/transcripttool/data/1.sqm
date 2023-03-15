@@ -1,0 +1,80 @@
+import io.reitmaier.transcripttool.core.data.domain.LocalId;
+import io.reitmaier.transcripttool.core.data.domain.RejectReason;
+import io.reitmaier.transcripttool.core.data.domain.RemoteId;
+import io.reitmaier.transcripttool.core.data.domain.SavedTranscript;
+import io.reitmaier.transcripttool.core.data.domain.SubmittedTranscript;
+import io.reitmaier.transcripttool.core.data.domain.TaskId;
+import io.reitmaier.transcripttool.core.data.domain.TaskProvenance;
+import kotlinx.datetime.Instant;
+
+DROP TRIGGER IF EXISTS update_lastest_transcript_on_insert;
+DROP TRIGGER IF EXISTS update_lastest_transcript_on_update;
+
+-- ALTER TABLE Task_Entity ADD COLUMN reject_reason TEXT AS RejectReason NOT NULL DEFAULT 'NONE';
+
+ALTER TABLE Task_Entity RENAME TO Task_Entity_Old;
+CREATE TABLE Task_Entity(
+    id INTEGER AS TaskId NOT NULL PRIMARY KEY AUTOINCREMENT,
+    remote_id INTEGER AS RemoteId NOT NULL,
+    remote_url TEXT NOT NULL,
+    length INTEGER NOT NULL,
+    region_length INTEGER NOT NULL,
+    provenance TEXT AS TaskProvenance NOT NULL,
+    display_name TEXT NOT NULL,
+
+    created_at INTEGER AS Instant NOT NULL,
+    updated_at INTEGER AS Instant NOT NULL,
+
+    latest_transcript TEXT AS SavedTranscript NOT NULL DEFAULT '',
+
+    local_entity INTEGER AS LocalId REFERENCES Local_Entity(id),
+    submitted_transcript TEXT AS SubmittedTranscript DEFAULT NULL,
+
+    reject_reason TEXT AS RejectReason DEFAULT NULL,
+
+    completed_at INTEGER AS Instant DEFAULT NULL,
+    submitted_at INTEGER AS Instant DEFAULT NULL
+);
+--
+INSERT INTO Task_Entity
+SELECT id
+     , remote_id
+     , remote_url
+     , length
+     , region_length
+     , provenance
+     , display_name
+     , created_at
+     , updated_at
+     , latest_transcript
+     , local_entity
+     , submitted_transcript
+     , NULL -- reject reason
+     , completed_at
+     , submitted_at
+FROM Task_Entity_Old
+;
+DROP TABLE Task_Entity_Old;
+-- ALTER TABLE Task_Entity_New RENAME TO Task_Entity;
+
+CREATE TRIGGER IF NOT EXISTS update_lastest_transcript_on_insert
+  AFTER INSERT ON Partial_Transcript_Entity
+BEGIN
+  UPDATE Task_Entity SET
+    latest_transcript = new.content,
+    updated_at = (SELECT * FROM timestamp)
+  WHERE id = new.task_id;
+END;
+
+
+CREATE TRIGGER IF NOT EXISTS update_lastest_transcript_on_update
+  AFTER UPDATE ON Partial_Transcript_Entity
+BEGIN
+  UPDATE Task_Entity SET
+    latest_transcript = new.content,
+    updated_at = (SELECT * FROM timestamp)
+  WHERE id = new.task_id;
+  UPDATE Partial_Transcript_Entity SET
+    updated_at = (SELECT * FROM timestamp)
+  WHERE id = new.id;
+END;
