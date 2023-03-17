@@ -25,10 +25,10 @@ val javaVersion: JavaVersion by rootProject.extra
 
 android {
   namespace = "io.reitmaier.transcripttool.core.ui"
-  compileSdk = 33
+  compileSdk = libs.versions.android.compileSdk.get().toInt()
 
   defaultConfig {
-    minSdk = 21
+    minSdk = libs.versions.android.minSdk.get().toInt()
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     consumerProguardFiles("consumer-rules.pro")

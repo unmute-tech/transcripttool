@@ -28,12 +28,12 @@ val javaVersion: JavaVersion by rootProject.extra
 
 android {
   namespace = "io.reitmaier.transcripttool"
-  compileSdk = 33
+  compileSdk = libs.versions.android.compileSdk.get().toInt()
 
   defaultConfig {
     applicationId = "io.reitmaier.transcripttool"
-    minSdk = 21
-    targetSdk = 33
+    minSdk = libs.versions.android.minSdk.get().toInt()
+    targetSdk = libs.versions.android.targetSdk.get().toInt()
     versionCode = 1
     versionName = "1.0"
 
@@ -123,6 +123,9 @@ dependencies {
   implementation(libs.kotlin.result)
   implementation(libs.kotlin.result.coroutines)
   implementation(libs.kotlin.retry)
+
+  // accompanist
+  implementation(libs.google.accompanist.navigation.animation)
 
   // Instrumented tests
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)

@@ -1,4 +1,8 @@
 [versions]
+accomponist = "0.28.0"
+android-compileSdk = "33"
+android-minSdk = "21"
+android-targetSdk = "33"
 androidGradlePlugin = "7.4.2"
 androidXDoucmentFile = "1.0.1"
 androidxActivity = "1.6.1"
@@ -12,6 +16,7 @@ androidxNavigation = "2.5.3"
 androidxRoom = "2.5.0"
 androidxTestExt = "1.1.5"
 androidxTestRunner = "1.5.2"
+ben-manes-versions = "0.46.0"
 conscript = "2.5.2"
 coroutines = "1.6.4"
 datetime = "0.4.0"
@@ -28,7 +33,6 @@ orbitMVI = "4.6.1"
 result = "1.1.16"
 retry = "1.0.9"
 sqlDelight = "1.5.5"
-ben-manes-versions = "0.46.0"
 
 [libraries]
 android-tools-desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
@@ -54,6 +58,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExt" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 conscript = { module = "org.conscrypt:conscrypt-android", version.ref = "conscript" }
+google-accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accomponist" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
@@ -83,6 +88,7 @@ squareup-sqldelight-sqlite-driver = { module = "com.squareup.sqldelight:sqlite-d
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions" }
 hilt-gradle = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
@@ -90,4 +96,3 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sqldelight = { id = "com.squareup.sqldelight", version.ref = "sqlDelight" }
-ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions" }
