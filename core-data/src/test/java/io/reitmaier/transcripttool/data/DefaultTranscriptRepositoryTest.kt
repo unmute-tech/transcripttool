@@ -16,6 +16,9 @@
 
 package io.reitmaier.transcripttool.data
 
+import io.reitmaier.transcripttool.core.data.DefaultTranscriptRepository
+import io.reitmaier.transcripttool.core.database.Transcript
+import io.reitmaier.transcripttool.core.database.TranscriptDao
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -23,9 +26,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import io.reitmaier.transcripttool.core.data.DefaultTranscriptRepository
-import io.reitmaier.transcripttool.core.database.Transcript
-import io.reitmaier.transcripttool.core.database.TranscriptDao
 
 /**
  * Unit tests for [DefaultTranscriptRepository].
@@ -33,26 +33,25 @@ import io.reitmaier.transcripttool.core.database.TranscriptDao
 @OptIn(ExperimentalCoroutinesApi::class) // TODO: Remove when stable
 class DefaultTranscriptRepositoryTest {
 
-    @Test
-    fun transcripts_newItemSaved_itemIsReturned() = runTest {
-        val repository = DefaultTranscriptRepository(FakeTranscriptDao())
+  @Test
+  fun transcripts_newItemSaved_itemIsReturned() = runTest {
+    val repository = DefaultTranscriptRepository(FakeTranscriptDao())
 
-        repository.add("Repository")
+    repository.add("Repository")
 
-        assertEquals(repository.transcripts.first().size, 1)
-    }
-
+    assertEquals(repository.transcripts.first().size, 1)
+  }
 }
 
 private class FakeTranscriptDao : TranscriptDao {
 
-    private val data = mutableListOf<Transcript>()
+  private val data = mutableListOf<Transcript>()
 
-    override fun getTranscripts(): Flow<List<Transcript>> = flow {
-        emit(data)
-    }
+  override fun getTranscripts(): Flow<List<Transcript>> = flow {
+    emit(data)
+  }
 
-    override suspend fun insertTranscript(item: Transcript) {
-        data.add(0, item)
-    }
+  override suspend fun insertTranscript(item: Transcript) {
+    data.add(0, item)
+  }
 }

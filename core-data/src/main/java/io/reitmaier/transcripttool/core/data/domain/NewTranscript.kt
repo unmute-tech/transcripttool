@@ -1,9 +1,8 @@
 package io.reitmaier.transcripttool.core.data.domain
 
+import io.reitmaier.transcripttool.core.data.parcelizers.InstantEpochSerializer
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import io.reitmaier.transcripttool.core.data.parcelizers.InstantEpochSerializer
-
 
 @Serializable
 data class NewTranscript(

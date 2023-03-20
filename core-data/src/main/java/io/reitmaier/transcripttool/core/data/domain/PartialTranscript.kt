@@ -1,7 +1,11 @@
 package io.reitmaier.transcripttool.core.data.domain
 
 import android.os.Parcelable
-import io.reitmaier.transcripttool.core.data.parcelizers.*
+import io.reitmaier.transcripttool.core.data.parcelizers.InstantParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.PartialTranscriptIdParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.RegionIdParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.SavedTranscriptParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.TaskIdParceler
 import kotlinx.datetime.Instant
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.WriteWith

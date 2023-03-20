@@ -1,6 +1,10 @@
 package io.reitmaier.transcripttool.core.data.domain
 
-import kotlinx.datetime.*
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 val Instant.localDate: LocalDate
   get() = localDateTime.date
@@ -14,4 +18,3 @@ fun Instant.formatLocalDateTime(): String {
     "${ldt.dayOfMonth.toString().padStart(2,'0')}/${ldt.monthNumber.toString().padStart(2,'0')}/${ldt.year}"
   return "$dateString ${ldt.toString().substringAfter("T").substringBefore(".")}"
 }
-

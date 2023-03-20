@@ -5,25 +5,44 @@ import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.toResultOr
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
-import io.reitmaier.transcripttool.core.data.domain.*
-import io.reitmaier.transcripttool.data.*
+import io.reitmaier.transcripttool.core.data.domain.DatabaseError
+import io.reitmaier.transcripttool.core.data.domain.DbResult
+import io.reitmaier.transcripttool.core.data.domain.Difficulty
+import io.reitmaier.transcripttool.core.data.domain.FileId
+import io.reitmaier.transcripttool.core.data.domain.LocalId
+import io.reitmaier.transcripttool.core.data.domain.PartialTranscriptId
+import io.reitmaier.transcripttool.core.data.domain.REGION_LENGTH
+import io.reitmaier.transcripttool.core.data.domain.RegionId
+import io.reitmaier.transcripttool.core.data.domain.RejectReason
+import io.reitmaier.transcripttool.core.data.domain.RemoteId
+import io.reitmaier.transcripttool.core.data.domain.SavedTranscript
+import io.reitmaier.transcripttool.core.data.domain.SubmittedTranscript
+import io.reitmaier.transcripttool.core.data.domain.TaskId
+import io.reitmaier.transcripttool.core.data.domain.TaskProvenance
+import io.reitmaier.transcripttool.data.File_Info
+import io.reitmaier.transcripttool.data.Local_Entity
+import io.reitmaier.transcripttool.data.Partial_Transcript_Entity
+import io.reitmaier.transcripttool.data.Region_Entity
+import io.reitmaier.transcripttool.data.Task_Entity
+import io.reitmaier.transcripttool.data.TranscriptToolDb
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.io.File
 
 // TODO Dispatchers IO
 class TranscribeDatabaseImpl(
   transcriptToolDb: TranscriptToolDb,
 //  private val dispatcher: CoroutineScope
-): TranscribeDatabase {
+) : TranscribeDatabase {
   private val queries = transcriptToolDb.transcriptTaskQueries
   override fun allTasks(): Flow<List<Task_Entity>> =
     queries.allTasks().asFlow().mapToList()
 
   override fun getTask(id: TaskId): DbResult<Task_Entity> =
-  runCatching {
-    queries.getTask(id).executeAsOne()
-  }.mapError { DatabaseError }
+    runCatching {
+      queries.getTask(id).executeAsOne()
+    }.mapError { DatabaseError }
 
   override fun nextTask(id: TaskId): DbResult<Task_Entity> =
     runCatching {
@@ -49,14 +68,14 @@ class TranscribeDatabaseImpl(
   override fun deleteTask(id: TaskId) =
     queries.deleteTask(id)
 
-  private fun now() : Instant =
+  private fun now(): Instant =
     Clock.System.now()
 
   override fun insertRemoteTask(
     remoteId: RemoteId,
     remoteUrl: String,
     displayName: String,
-    durationMs: Long
+    durationMs: Long,
   ): DbResult<Task_Entity> =
     runCatching<TranscribeDatabaseImpl, Task_Entity> {
       val timestamp = now()
@@ -85,7 +104,7 @@ class TranscribeDatabaseImpl(
     fileId: FileId,
     path: String,
     displayName: String,
-    durationMs: Long
+    durationMs: Long,
   ): DbResult<Task_Entity> =
     runCatching<TranscribeDatabaseImpl, Task_Entity> {
       val timestamp = now()
@@ -117,7 +136,7 @@ class TranscribeDatabaseImpl(
       }
     }.mapError { DatabaseError }
 
-  override fun setSubmittedTranscript(id: TaskId, transcript: SubmittedTranscript) : DbResult<Unit> =
+  override fun setSubmittedTranscript(id: TaskId, transcript: SubmittedTranscript): DbResult<Unit> =
     runCatching {
       queries.transaction {
         queries.updateSubmittedTranscript(transcript, id)
@@ -125,7 +144,7 @@ class TranscribeDatabaseImpl(
       }
     }.mapError { DatabaseError }
 
-  override fun markTaskUploaded(id: TaskId) : DbResult<Unit> =
+  override fun markTaskUploaded(id: TaskId): DbResult<Unit> =
     runCatching {
       queries.markTaskUploaded(id)
     }.mapError { DatabaseError }
@@ -142,7 +161,7 @@ class TranscribeDatabaseImpl(
           updated_at = timestamp,
         )
         val localId = LocalId(queries.rowid().executeAsOne().toInt())
-        queries.addLocalEntityToTask(localId,taskId)
+        queries.addLocalEntityToTask(localId, taskId)
         queries.getTask(taskId).executeAsOne()
       }
     }.mapError { DatabaseError }
@@ -171,7 +190,7 @@ class TranscribeDatabaseImpl(
         start = start.toLong(),
         end = end.toLong(),
         active = true,
-        play_count = 0
+        play_count = 0,
       )
       val id = RegionId(queries.rowid().executeAsOne().toInt())
       queries.getRegion(id).executeAsOne()
@@ -188,7 +207,7 @@ class TranscribeDatabaseImpl(
 
   override fun insertPartialTranscript(
     region: Region_Entity,
-    transcript: String
+    transcript: String,
   ): Partial_Transcript_Entity =
     queries.transactionWithResult {
       queries.insertPartialTranscription(
@@ -196,14 +215,14 @@ class TranscribeDatabaseImpl(
         task_id = region.task_id,
         region_id = region.id,
         content = SavedTranscript(transcript),
-        updated_at = Clock.System.now()
+        updated_at = Clock.System.now(),
       )
       val id = PartialTranscriptId(queries.rowid().executeAsOne().toInt())
       queries.getPartialTranscript(id).executeAsOne()
     }
 
-  override fun updatePartialTranscript(id: PartialTranscriptId, transcript: String) : SavedTranscript {
-    queries.updatePartialTranscription(SavedTranscript(transcript),id)
+  override fun updatePartialTranscript(id: PartialTranscriptId, transcript: String): SavedTranscript {
+    queries.updatePartialTranscription(SavedTranscript(transcript), id)
     return queries.getPartialTranscript(id).executeAsOne().content
   }
 
@@ -214,7 +233,7 @@ class TranscribeDatabaseImpl(
   override fun insertFileInfo(
     extension: String,
     orig_uri: String,
-    orig_display_name: String?
+    orig_display_name: String?,
   ): File_Info {
     val timestamp = now()
     queries.insertFileInfo(
@@ -231,12 +250,12 @@ class TranscribeDatabaseImpl(
   }
 
   override fun getFileName(
-    id: FileId
-  ) : String =
+    id: FileId,
+  ): String =
     queries.getFileName(id).executeAsOne()
 
   override fun getLocalEntity(
-    id: LocalId
-  ) : Local_Entity =
+    id: LocalId,
+  ): Local_Entity =
     queries.getLocalEntity(id).executeAsOne()
 }

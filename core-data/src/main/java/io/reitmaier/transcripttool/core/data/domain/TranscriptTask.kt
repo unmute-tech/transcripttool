@@ -1,7 +1,13 @@
 package io.reitmaier.transcripttool.core.data.domain
 
 import android.os.Parcelable
-import io.reitmaier.transcripttool.core.data.parcelizers.*
+import io.reitmaier.transcripttool.core.data.parcelizers.InputtedTranscriptParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.InstantParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.NullableInstantParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.NullableSubmittedTranscriptParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.RemoteIdParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.SavedTranscriptParceler
+import io.reitmaier.transcripttool.core.data.parcelizers.TaskIdParceler
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.parcelize.Parcelize
@@ -35,17 +41,19 @@ data class TranscriptTask(
   val difficulty: Difficulty?,
 //  val activeRegion: @WriteWith<NullableRegionIdParceler> RegionId?,
 ) : Parcelable {
-  val state : TaskState
+  val state: TaskState
     get() {
-      return if(rejectReason != null) {
+      return if (rejectReason != null) {
         TaskState.REJECTED
       } else if (completedAt != null) {
         TaskState.COMPLETED
-      } else if(updatedAt > createdAt) {
+      } else if (updatedAt > createdAt) {
         TaskState.IN_PROGRESS
-      } else TaskState.NEW
+      } else {
+        TaskState.NEW
+      }
     }
-  val isSynced : Boolean
+  val isSynced: Boolean
     get() = (submittedAt != null && submittedAt >= updatedAt)
 
   companion object {
@@ -58,7 +66,7 @@ data class TranscriptTask(
       updatedAt = Clock.System.now(),
       completedAt = Clock.System.now(),
       submittedAt = Clock.System.now(),
-      inputtedTranscript  = InputtedTranscript.Preview,
+      inputtedTranscript = InputtedTranscript.Preview,
       savedTranscript = SavedTranscript.Preview,
       submittedTranscript = SubmittedTranscript.Preview,
       rejectReason = null,
@@ -67,7 +75,7 @@ data class TranscriptTask(
       taskProvenance = TaskProvenance.LOCAL,
       displayName = "PTT-20210804-WA0002.opus",
       difficulty = Difficulty.HARD,
-      )
+    )
 
     val Preview2 = Preview.copy(id = TaskId(2), displayName = "PTT-20210804-WA0003.opus")
     val Preview3 = Preview.copy(id = TaskId(3), displayName = "PTT-20210804-WA0005.opus")
@@ -76,7 +84,7 @@ data class TranscriptTask(
 
 enum class TaskProvenance(val provenance: String) {
   LOCAL("LOCAL"),
-  REMOTE("REMOTE")
+  REMOTE("REMOTE"),
 }
 
 @Serializable
@@ -85,4 +93,3 @@ enum class RejectReason(val value: String) {
   INAPPROPRIATE("INAPPROPRIATE"),
   UNDERAGE("UNDERAGE"),
 }
-

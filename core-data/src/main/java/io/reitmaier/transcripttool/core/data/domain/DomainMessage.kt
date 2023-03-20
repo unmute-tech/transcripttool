@@ -1,6 +1,6 @@
 package io.reitmaier.transcripttool.core.data.domain
 import android.os.Parcelable
-import com.github.michaelbull.result.*
+import com.github.michaelbull.result.Result
 import kotlinx.parcelize.Parcelize
 
 typealias ApiResult<T> = Result<T, ApiError>
@@ -48,10 +48,10 @@ object ParsingError : ApiError()
 data class NetworkError(val throwable: Throwable) : ApiError()
 
 @Parcelize
-object Unauthorized: ApiError()
+object Unauthorized : ApiError()
 
 @Parcelize
-object DuplicateUser: ApiError()
+object DuplicateUser : ApiError()
 
 @Parcelize
-object ServerError: ApiError()
+object ServerError : ApiError()

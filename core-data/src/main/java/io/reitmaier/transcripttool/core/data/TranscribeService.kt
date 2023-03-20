@@ -2,22 +2,72 @@ package io.reitmaier.transcripttool.core.data
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.github.michaelbull.result.*
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.andThen
+import com.github.michaelbull.result.binding
+import com.github.michaelbull.result.get
+import com.github.michaelbull.result.map
+import com.github.michaelbull.result.mapError
+import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onSuccess
+import com.github.michaelbull.result.runCatching
+import com.github.michaelbull.result.toResultOr
 import com.github.michaelbull.retry.retry
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.auth.*
-import io.ktor.client.plugins.auth.providers.*
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BearerTokens
+import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.onDownload
+import io.ktor.client.plugins.onUpload
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import io.reitmaier.transcripttool.core.data.dispatchers.CoroutineDispatchers
-import io.reitmaier.transcripttool.core.data.domain.*
+import io.reitmaier.transcripttool.core.data.domain.ApiError
+import io.reitmaier.transcripttool.core.data.domain.ApiResult
+import io.reitmaier.transcripttool.core.data.domain.AuthResponse
+import io.reitmaier.transcripttool.core.data.domain.CompleteTaskRequest
+import io.reitmaier.transcripttool.core.data.domain.DatabaseError
+import io.reitmaier.transcripttool.core.data.domain.DomainMessage
+import io.reitmaier.transcripttool.core.data.domain.DomainResult
+import io.reitmaier.transcripttool.core.data.domain.DuplicateUser
+import io.reitmaier.transcripttool.core.data.domain.MobileNumber
+import io.reitmaier.transcripttool.core.data.domain.NetworkError
+import io.reitmaier.transcripttool.core.data.domain.NewTranscript
+import io.reitmaier.transcripttool.core.data.domain.NoAccessToken
+import io.reitmaier.transcripttool.core.data.domain.NoRefreshToken
+import io.reitmaier.transcripttool.core.data.domain.PREFS_ACCESS_TOKEN
+import io.reitmaier.transcripttool.core.data.domain.PREFS_MOBILE
+import io.reitmaier.transcripttool.core.data.domain.PREFS_PASSWORD
+import io.reitmaier.transcripttool.core.data.domain.PREFS_REFRESH_TOKEN
+import io.reitmaier.transcripttool.core.data.domain.ParsingError
+import io.reitmaier.transcripttool.core.data.domain.Password
+import io.reitmaier.transcripttool.core.data.domain.ProvisionalTask
+import io.reitmaier.transcripttool.core.data.domain.RegistrationRequest
+import io.reitmaier.transcripttool.core.data.domain.RejectReason
+import io.reitmaier.transcripttool.core.data.domain.RemoteId
+import io.reitmaier.transcripttool.core.data.domain.ServerError
+import io.reitmaier.transcripttool.core.data.domain.SubmittedTranscript
+import io.reitmaier.transcripttool.core.data.domain.TaskDto
+import io.reitmaier.transcripttool.core.data.domain.Unauthorized
+import io.reitmaier.transcripttool.core.data.domain.UserInfo
+import io.reitmaier.transcripttool.core.data.domain.UserInfoNotFound
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import logcat.logcat
@@ -27,13 +77,12 @@ import java.security.Security
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class TranscribeService @Inject constructor(
   private val prefs: SharedPreferences,
   private val context: Context,
   private val dispatcher: CoroutineDispatchers,
-){
+) {
   init {
     // Fix SSL Handshake Error in 7.0 (API 24)
     // https://stackoverflow.com/a/70862408
@@ -47,7 +96,7 @@ class TranscribeService @Inject constructor(
             prettyPrint = true
             isLenient = true
             ignoreUnknownKeys = true
-          }
+          },
         )
       }
       expectSuccess = false
@@ -61,7 +110,7 @@ class TranscribeService @Inject constructor(
             prettyPrint = true
             isLenient = true
             ignoreUnknownKeys = true
-          }
+          },
         )
       }
       expectSuccess = false
@@ -74,10 +123,11 @@ class TranscribeService @Inject constructor(
           }
           refreshTokens { // this: RefreshTokensParams
             this.oldTokens.let {
-              if (it != null)
+              if (it != null) {
                 refresh(it).get()
-              else
+              } else {
                 null
+              }
             }
           }
         }
@@ -90,31 +140,31 @@ class TranscribeService @Inject constructor(
     val url: String,
   )
 
-  fun getUserInfo() : DomainResult<UserInfo> =
+  fun getUserInfo(): DomainResult<UserInfo> =
     binding {
-      val mobile = prefs.getString(prefsMobile, null).toResultOr { UserInfoNotFound }.bind()
-      val password = prefs.getString(prefsPassword, null).toResultOr { UserInfoNotFound }.bind()
+      val mobile = prefs.getString(PREFS_MOBILE, null).toResultOr { UserInfoNotFound }.bind()
+      val password = prefs.getString(PREFS_PASSWORD, null).toResultOr { UserInfoNotFound }.bind()
       UserInfo(MobileNumber(mobile), Password(password))
     }
 
   private fun saveAccessTokens(tokens: BearerTokens) {
     prefs.edit()
-      .putString(prefsAccessToken, tokens.accessToken)
-      .putString(prefsRefreshToken, tokens.refreshToken)
+      .putString(PREFS_ACCESS_TOKEN, tokens.accessToken)
+      .putString(PREFS_REFRESH_TOKEN, tokens.refreshToken)
       .apply()
   }
   fun saveUserInfo(mobile: MobileNumber, password: Password) {
     prefs.edit()
-      .putString(prefsMobile, mobile.value)
-      .putString(prefsPassword, password.value)
+      .putString(PREFS_MOBILE, mobile.value)
+      .putString(PREFS_PASSWORD, password.value)
       .apply()
   }
-  private fun getBearerTokens() : BearerTokens? {
+  private fun getBearerTokens(): BearerTokens? {
     val savedTokens = binding<BearerTokens, DomainMessage> {
-      val accessToken = prefs.getString(prefsAccessToken, null).toResultOr { NoAccessToken }.bind()
-      val refreshToken = prefs.getString(prefsRefreshToken, null).toResultOr { NoRefreshToken }.bind()
+      val accessToken = prefs.getString(PREFS_ACCESS_TOKEN, null).toResultOr { NoAccessToken }.bind()
+      val refreshToken = prefs.getString(PREFS_REFRESH_TOKEN, null).toResultOr { NoRefreshToken }.bind()
       BearerTokens(accessToken, refreshToken)
-    } .onFailure { logcat { "Failed to load BearerTokens, because $it" } }
+    }.onFailure { logcat { "Failed to load BearerTokens, because $it" } }
       .onSuccess { logcat { "Loaded saved BearerTokens" } }
 
     // Return Saved tokens
@@ -127,37 +177,36 @@ class TranscribeService @Inject constructor(
 //      .get()
   }
 
-
-  suspend fun downloadToFile(url: String, file: File) : Result<File,ApiError> =
+  suspend fun downloadToFile(url: String, file: File): Result<File, ApiError> =
     // Request File from Server
     withContext(dispatcher.io) {
       runCatching {
         val response: HttpResponse = client.get(url) {
           onDownload { bytesSentTotal, contentLength ->
-            logcat {"Received $bytesSentTotal bytes from $contentLength" }
+            logcat { "Received $bytesSentTotal bytes from $contentLength" }
           }
         }
-        if(response.status.isSuccess()) {
+        if (response.status.isSuccess()) {
           // Save response to file
           val responseBody: ByteArray = response.body()
           file.writeBytes(responseBody)
           file
-        } else{
-          throw(Throwable("Request unsuccessful: ${response.toString()}"))
+        } else {
+          throw(Throwable("Request unsuccessful: $response"))
         }
       }.mapError { NetworkError(it) }
     }
 
-  private suspend fun refresh(tokens: BearerTokens) : Result<BearerTokens, ApiError> =
+  private suspend fun refresh(tokens: BearerTokens): Result<BearerTokens, ApiError> =
     withContext(dispatcher.io) {
-      logcat {"Refreshing ${tokens.refreshToken}"}
+      logcat { "Refreshing ${tokens.refreshToken}" }
       // Make the request
       runCatching {
         client.post("$BASE_URL/refresh") {
           contentType(ContentType.Application.Json)
           setBody(tokens.refreshToken)
-        }.also { logcat {"Made refresh request: ${tokens.refreshToken}"} }
-      }.mapError { NetworkError(it).also { logcat {"Network Error"} } } // Catch Network Error
+        }.also { logcat { "Made refresh request: ${tokens.refreshToken}" } }
+      }.mapError { NetworkError(it).also { logcat { "Network Error" } } } // Catch Network Error
         .andThen { response ->
           // Surface unauthorized request
           if (response.status == HttpStatusCode.Unauthorized) {
@@ -168,28 +217,29 @@ class TranscribeService @Inject constructor(
             response.body<AuthResponse>().also { logcat { "Parsing auth response" } }
           }.mapError {
             logcat { it.toString() }
-            ServerError.also { logcat { "Failed to parse auth response" } } } // Error here is server's fault
+            ServerError.also { logcat { "Failed to parse auth response" } }
+          } // Error here is server's fault
         }
     }.map { authResponse ->
       // Save and return tokens
       val bearerTokens = BearerTokens(
         accessToken = authResponse.accessToken,
-        refreshToken = authResponse.refreshToken
+        refreshToken = authResponse.refreshToken,
       )
       saveAccessTokens(bearerTokens)
       bearerTokens
     }
 
-  private suspend fun login(userInfo: UserInfo) : Result<BearerTokens, ApiError> =
+  private suspend fun login(userInfo: UserInfo): Result<BearerTokens, ApiError> =
     withContext(dispatcher.io) {
-      logcat {"Login $userInfo"}
+      logcat { "Login $userInfo" }
       // Make the request
       runCatching {
         clientNoAuth.post("$BASE_URL/login") {
           contentType(ContentType.Application.Json)
           setBody(userInfo)
-        }.also { logcat {"Made Login request: $userInfo"} }
-      }.mapError { NetworkError(it).also { logcat {"Network Error"} } } // Catch Network Error
+        }.also { logcat { "Made Login request: $userInfo" } }
+      }.mapError { NetworkError(it).also { logcat { "Network Error" } } } // Catch Network Error
         .andThen { response ->
           logcat { response.bodyAsText() }
           // Surface unauthorized request
@@ -205,12 +255,12 @@ class TranscribeService @Inject constructor(
       // Save and return tokens
       val bearerTokens = BearerTokens(
         accessToken = authResponse.accessToken,
-        refreshToken = authResponse.refreshToken
+        refreshToken = authResponse.refreshToken,
       )
       saveAccessTokens(bearerTokens)
       bearerTokens
     }
-  suspend fun registerAccount(registrationRequest: RegistrationRequest) : Result<UserInfo, ApiError> =
+  suspend fun registerAccount(registrationRequest: RegistrationRequest): Result<UserInfo, ApiError> =
     withContext(dispatcher.io) {
       runCatching {
         clientNoAuth.post("$BASE_URL/register") {
@@ -220,27 +270,26 @@ class TranscribeService @Inject constructor(
       }.mapError { NetworkError(it) }
         .andThen { response ->
           when (response.status) {
-              HttpStatusCode.Created -> {
-                  val userInfo = UserInfo(registrationRequest.mobile, registrationRequest.password)
-                  saveUserInfo(userInfo.mobile, userInfo.password)
-                  Ok(userInfo)
-              }
-              HttpStatusCode.Conflict -> {
-                  Err(DuplicateUser)
-              }
-              else -> {
-                  Err(NetworkError(Throwable("Request unsuccessful: $response")))
-              }
+            HttpStatusCode.Created -> {
+              val userInfo = UserInfo(registrationRequest.mobile, registrationRequest.password)
+              saveUserInfo(userInfo.mobile, userInfo.password)
+              Ok(userInfo)
+            }
+            HttpStatusCode.Conflict -> {
+              Err(DuplicateUser)
+            }
+            else -> {
+              Err(NetworkError(Throwable("Request unsuccessful: $response")))
+            }
           }
         }.andThen { user ->
           login(user).map {
             user
           }
         }
-
     }
 
-  suspend fun submitTask(provisionalTask: ProvisionalTask, durationMs: Long) : ApiResult<RemoteTask> =
+  suspend fun submitTask(provisionalTask: ProvisionalTask, durationMs: Long): ApiResult<RemoteTask> =
     withContext(dispatcher.io) {
       logcat { "Submitting task to API Server: $provisionalTask" }
       retry {
@@ -254,10 +303,14 @@ class TranscribeService @Inject constructor(
             url = "$BASE_URL/tasks",
             formData = formData {
               append("length", durationMs.toString())
-              append("file", audioData, Headers.build {
-                append(HttpHeaders.ContentDisposition, "filename=${provisionalTask.displayName}")
-              })
-            }
+              append(
+                "file",
+                audioData,
+                Headers.build {
+                  append(HttpHeaders.ContentDisposition, "filename=${provisionalTask.displayName}")
+                },
+              )
+            },
           ) {
             // Track progress
             onUpload { bytesSentTotal, contentLength ->
@@ -268,18 +321,17 @@ class TranscribeService @Inject constructor(
       }
         .andThen { response ->
           logcat { "Upload response: $response" }
-          if(response.status == HttpStatusCode.Created) {
+          if (response.status == HttpStatusCode.Created) {
             val id = response.body<String>().toIntOrNull() ?: return@andThen Err(ServerError)
-            Ok(RemoteTask(RemoteId(id),id.toString()))
-          }
-          else {
+            Ok(RemoteTask(RemoteId(id), id.toString()))
+          } else {
             // TODO Figure out what went wrong (e.g. File Exists)
             Err(ServerError)
           }
         }
     }
 
-  internal suspend fun refreshTasks() : DomainResult<List<TaskDto>> =
+  internal suspend fun refreshTasks(): DomainResult<List<TaskDto>> =
     withContext(dispatcher.io) {
       logcat { "Refreshing Tasks" }
       runCatching {
@@ -287,19 +339,18 @@ class TranscribeService @Inject constructor(
         }
       }.mapError { NetworkError(it) }
         .andThen { response ->
-          if(response.status == HttpStatusCode.OK) {
+          if (response.status == HttpStatusCode.OK) {
             runCatching {
               response.body<List<TaskDto>>().also { logcat { it.toString() } }
             }.mapError { error -> ParsingError.also { logcat { error.toString() } } }
-          }
-          else {
-            logcat { "Refresh Failed "}
+          } else {
+            logcat { "Refresh Failed " }
             Err(ServerError)
           }
         }
     }
 
-  suspend fun uploadTranscripts(remoteId: RemoteId, newTranscripts: List<NewTranscript>) : DomainResult<SubmittedTranscript> {
+  suspend fun uploadTranscripts(remoteId: RemoteId, newTranscripts: List<NewTranscript>): DomainResult<SubmittedTranscript> {
     return withContext(dispatcher.io) {
       runCatching {
         client.post("$BASE_URL/tasks/${remoteId.value}/transcripts") {
@@ -308,7 +359,7 @@ class TranscribeService @Inject constructor(
         }
       }.mapError { NetworkError(it) }
         .andThen { response ->
-          if(!response.status.isSuccess()) {
+          if (!response.status.isSuccess()) {
             return@andThen Err(ServerError)
           }
           val latest = newTranscripts.maxByOrNull { it.updatedAt } ?: return@andThen Err(DatabaseError)
@@ -321,14 +372,14 @@ class TranscribeService @Inject constructor(
     return runCatching {
       clientNoAuth.post("$BASE_URL/error") {
         setBody(message)
-      }.also { logcat {"Submitted Log to server"} }
+      }.also { logcat { "Submitted Log to server" } }
     }.mapError {
-      logcat {"Network Error: $it"}
+      logcat { "Network Error: $it" }
       NetworkError(it)
     } // Catch Network Error
   }
 
-  internal suspend fun completeTask(remoteId: RemoteId, completeTaskRequest: CompleteTaskRequest) : DomainResult<Unit> {
+  internal suspend fun completeTask(remoteId: RemoteId, completeTaskRequest: CompleteTaskRequest): DomainResult<Unit> {
     return withContext(dispatcher.io) {
       runCatching {
         client.post("$BASE_URL/tasks/${remoteId.value}/complete") {
@@ -338,10 +389,9 @@ class TranscribeService @Inject constructor(
       }.mapError { NetworkError(it) }
         .andThen { response ->
           runCatching {
-            if(response.status == HttpStatusCode.OK) {
+            if (response.status == HttpStatusCode.OK) {
               return@runCatching
-            }
-            else {
+            } else {
               throw Throwable("Reject Request Unsuccessful: $response")
             }
           }.mapError { NetworkError(it) }
@@ -349,7 +399,7 @@ class TranscribeService @Inject constructor(
     }
   }
 
-  internal suspend fun rejectTask(remoteId: RemoteId, rejectReason: RejectReason?) : DomainResult<Unit> {
+  internal suspend fun rejectTask(remoteId: RemoteId, rejectReason: RejectReason?): DomainResult<Unit> {
     return withContext(dispatcher.io) {
       runCatching {
         client.post("$BASE_URL/tasks/${remoteId.value}/reject") {
@@ -359,10 +409,9 @@ class TranscribeService @Inject constructor(
       }.mapError { NetworkError(it) }
         .andThen { response ->
           runCatching {
-            if(response.status == HttpStatusCode.OK) {
+            if (response.status == HttpStatusCode.OK) {
               return@runCatching
-            }
-            else {
+            } else {
               throw Throwable("Reject Request Unsuccessful: $response")
             }
           }.mapError { NetworkError(it) }
@@ -375,5 +424,4 @@ class TranscribeService @Inject constructor(
 //    const val BASE_URL: String = "https://sidebyside.reitmaier.xyz"
 //    const val BASE_URL: String = "https://transcribeapi.reitmaier.xyz"
   }
-
 }

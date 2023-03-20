@@ -26,13 +26,18 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import io.reitmaier.transcripttool.core.data.*
+import io.reitmaier.transcripttool.core.data.DefaultTranscriptRepository
+import io.reitmaier.transcripttool.core.data.TranscribeDatabase
+import io.reitmaier.transcripttool.core.data.TranscribeService
+import io.reitmaier.transcripttool.core.data.TranscriptRepo
+import io.reitmaier.transcripttool.core.data.TranscriptRepository
 import io.reitmaier.transcripttool.core.data.dispatchers.CoroutineDispatchers
 import io.reitmaier.transcripttool.core.data.dispatchers.DefaultCoroutineDispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import io.reitmaier.transcripttool.core.data.migrateIfNeeded
 import io.reitmaier.transcripttool.core.database.TranscriptDao
 import io.reitmaier.transcripttool.data.TranscriptToolDb
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -48,7 +53,7 @@ object DataModule {
     val driver = AndroidSqliteDriver(
       schema = TranscriptToolDb.Schema,
       context = app,
-      name = "transcripttool.db"
+      name = "transcripttool.db",
     )
     migrateIfNeeded(driver)
     return driver
@@ -68,8 +73,8 @@ object DataModule {
     prefs: SharedPreferences,
     @ApplicationContext context: Context,
     dispatchers: CoroutineDispatchers,
-  ) : TranscribeService {
-    return TranscribeService(prefs,context,dispatchers)
+  ): TranscribeService {
+    return TranscribeService(prefs, context, dispatchers)
   }
 
   @Provides
@@ -79,14 +84,14 @@ object DataModule {
     service: TranscribeService,
     @ApplicationContext context: Context,
     prefs: SharedPreferences,
-    dispatchers: CoroutineDispatchers
-  ) : TranscriptRepo {
+    dispatchers: CoroutineDispatchers,
+  ): TranscriptRepo {
     return TranscriptRepo(
       database = database,
       service = service,
       context = context,
       prefs = prefs,
-      dispatchers = dispatchers
+      dispatchers = dispatchers,
     )
   }
 
@@ -99,7 +104,7 @@ object DataModule {
   @Singleton
   @Provides
   fun providesTranscriptRepository(
-    transcriptDao: TranscriptDao
+    transcriptDao: TranscriptDao,
   ): TranscriptRepository = DefaultTranscriptRepository(transcriptDao)
 }
 

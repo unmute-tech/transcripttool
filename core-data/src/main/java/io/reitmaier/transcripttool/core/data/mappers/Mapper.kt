@@ -10,13 +10,12 @@ import io.reitmaier.transcripttool.data.Partial_Transcript_Entity
 import io.reitmaier.transcripttool.data.Region_Entity
 import io.reitmaier.transcripttool.data.Task_Entity
 
-
-fun Task_Entity.toTranscriptTask() : TranscriptTask {
+fun Task_Entity.toTranscriptTask(): TranscriptTask {
   return ToTranscriptTask.fromTask_Entity(this)
 }
 
 internal object ToTranscriptTask {
-  fun fromTask_Entity(taskEntity: Task_Entity) : TranscriptTask =
+  fun fromTask_Entity(taskEntity: Task_Entity): TranscriptTask =
     TranscriptTask(
       id = taskEntity.id,
       remoteUrl = taskEntity.remote_url,
@@ -38,7 +37,7 @@ internal object ToTranscriptTask {
 }
 
 internal object ToRegion {
-  fun fromRegion_Entity(regionEntity: Region_Entity) : Region =
+  fun fromRegion_Entity(regionEntity: Region_Entity): Region =
     Region(
       id = regionEntity.id,
       taskId = regionEntity.task_id,
@@ -50,7 +49,7 @@ internal object ToRegion {
 }
 
 internal object ToPartialTranscript {
-  fun fromPartial_Transcript_Entity(partialTranscriptEntity: Partial_Transcript_Entity) : PartialTranscript =
+  fun fromPartial_Transcript_Entity(partialTranscriptEntity: Partial_Transcript_Entity): PartialTranscript =
     PartialTranscript(
       id = partialTranscriptEntity.id,
       taskId = partialTranscriptEntity.task_id,

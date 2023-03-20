@@ -5,7 +5,7 @@ package io.reitmaier.transcripttool.core.data.domain
  *  @param duration Current track duration in millisecond.
  */
 data class PlaybackProgress(
-    val current: Long,
-    val regionPosition: Int,
-    val duration: Long
+  val current: Long,
+  val regionPosition: Int,
+  val duration: Long,
 )

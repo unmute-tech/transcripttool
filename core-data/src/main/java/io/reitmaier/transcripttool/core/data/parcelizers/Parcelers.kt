@@ -1,7 +1,19 @@
 package io.reitmaier.transcripttool.core.data.parcelizers
 
 import android.os.Parcel
-import io.reitmaier.transcripttool.core.data.domain.*
+import io.reitmaier.transcripttool.core.data.domain.FileId
+import io.reitmaier.transcripttool.core.data.domain.InputtedTranscript
+import io.reitmaier.transcripttool.core.data.domain.LocalId
+import io.reitmaier.transcripttool.core.data.domain.MobileNumber
+import io.reitmaier.transcripttool.core.data.domain.MobileOperator
+import io.reitmaier.transcripttool.core.data.domain.Name
+import io.reitmaier.transcripttool.core.data.domain.PartialTranscriptId
+import io.reitmaier.transcripttool.core.data.domain.Password
+import io.reitmaier.transcripttool.core.data.domain.RegionId
+import io.reitmaier.transcripttool.core.data.domain.RemoteId
+import io.reitmaier.transcripttool.core.data.domain.SavedTranscript
+import io.reitmaier.transcripttool.core.data.domain.SubmittedTranscript
+import io.reitmaier.transcripttool.core.data.domain.TaskId
 import kotlinx.datetime.Instant
 import kotlinx.parcelize.Parceler
 import kotlinx.serialization.KSerializer
@@ -285,16 +297,3 @@ object DurationParceler : Parceler<Duration> {
     parcel.writeString(this.toIsoString())
   }
 }
-//object NullableTaskIdParceler : Parceler<TaskId?> {
-//  override fun create(parcel: Parcel): TaskId? {
-//    val id = parcel.readInt() ?: return null
-//    return TaskId(id)
-//  }
-//  override fun TaskId?.write(parcel: Parcel, flags: Int) {
-//    if (this == null) {
-//      parcel.writeValue(null)
-//    } else {
-//      parcel.writeInt(this.id)
-//    }
-//  }
-//}

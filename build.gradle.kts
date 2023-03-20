@@ -1,3 +1,8 @@
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_SRC_DIR_JAVA
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_SRC_DIR_KOTLIN
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_TEST_SRC_DIR_JAVA
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_TEST_SRC_DIR_KOTLIN
+
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -14,5 +19,41 @@
  * limitations under the License.
  */
 
+@Suppress("DSL_SCOPE_VIOLATION") // because of https://youtrack.jetbrains.com/issue/KTIJ-19369
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.hilt.gradle) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.kapt) apply false
+    alias(libs.plugins.kotlin.parcelize) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.sqldelight) apply false
+}
 // Root build.gradle.kts
 val javaVersion by extra { JavaVersion.VERSION_11 }
+
+allprojects {
+    apply {
+        plugin(rootProject.libs.plugins.detekt.get().pluginId)
+    }
+
+    dependencies {
+        detektPlugins(rootProject.libs.io.gitlab.arturbosch.detekt.formatting)
+    }
+
+    detekt {
+        source = files(
+            "src",
+            DEFAULT_SRC_DIR_JAVA,
+            DEFAULT_TEST_SRC_DIR_JAVA,
+            DEFAULT_SRC_DIR_KOTLIN,
+            DEFAULT_TEST_SRC_DIR_KOTLIN,
+        )
+        toolVersion = rootProject.libs.versions.detekt.get()
+        config = rootProject.files("config/detekt/detekt.yml")
+        parallel = true
+    }
+}

@@ -2,15 +2,15 @@ package io.reitmaier.transcripttool.core.data.domain
 
 import android.os.Parcel
 import android.os.Parcelable
-import kotlinx.datetime.Instant
-import kotlinx.serialization.Serializable
 import io.reitmaier.transcripttool.core.data.parcelizers.FileIdSerializer
 import io.reitmaier.transcripttool.core.data.parcelizers.RemoteIdSerializer
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class CompleteTaskRequest(
   val difficulty: Difficulty?,
-  val completed_at: Instant
+  val completed_at: Instant,
 )
 
 @Serializable
@@ -28,7 +28,7 @@ enum class Confidence {
 }
 
 // TODO make internal
-@Serializable (with = RemoteIdSerializer::class)
+@Serializable(with = RemoteIdSerializer::class)
 @JvmInline
 value class RemoteId(val value: Int) {
   companion object {
@@ -39,7 +39,6 @@ value class RemoteId(val value: Int) {
 // TODO can we make constructor private?
 
 @JvmInline
-//@Parcelize
 value class TaskId(val value: Int) : Parcelable {
   constructor(parcel: Parcel) : this(parcel.readInt())
 
@@ -60,16 +59,13 @@ value class TaskId(val value: Int) : Parcelable {
       return arrayOfNulls(size)
     }
   }
-
 }
 
 @JvmInline
 value class RegionId(val value: Int)
 
-
 @JvmInline
 value class LocalId(val value: Int)
-
 
 @Serializable(with = FileIdSerializer::class)
 @JvmInline
@@ -110,7 +106,6 @@ value class SubmittedTranscript internal constructor(val value: String) {
   }
 }
 
-
 @JvmInline
 value class PartialTranscriptId(val value: Int)
 
@@ -119,4 +114,3 @@ data class UserInfo(
   val mobile: MobileNumber,
   val password: Password,
 )
-

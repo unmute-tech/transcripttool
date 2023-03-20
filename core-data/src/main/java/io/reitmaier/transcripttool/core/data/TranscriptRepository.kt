@@ -16,26 +16,26 @@
 
 package io.reitmaier.transcripttool.core.data
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import io.reitmaier.transcripttool.core.database.Transcript
 import io.reitmaier.transcripttool.core.database.TranscriptDao
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 interface TranscriptRepository {
-    val transcripts: Flow<List<String>>
+  val transcripts: Flow<List<String>>
 
-    suspend fun add(name: String)
+  suspend fun add(name: String)
 }
 
 class DefaultTranscriptRepository @Inject constructor(
-    private val transcriptDao: TranscriptDao
+  private val transcriptDao: TranscriptDao,
 ) : TranscriptRepository {
 
-    override val transcripts: Flow<List<String>> =
-        transcriptDao.getTranscripts().map { items -> items.map { it.name } }
+  override val transcripts: Flow<List<String>> =
+    transcriptDao.getTranscripts().map { items -> items.map { it.name } }
 
-    override suspend fun add(name: String) {
-        transcriptDao.insertTranscript(Transcript(name = name))
-    }
+  override suspend fun add(name: String) {
+    transcriptDao.insertTranscript(Transcript(name = name))
+  }
 }

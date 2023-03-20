@@ -13,7 +13,7 @@ fun <T : Enum<T>> Bundle.putEnum(key: String, value: T?) =
 inline fun <reified T : Enum<T>> SharedPreferences.getEnum(key: String, default: T) =
   this.getInt(key, -1).let { if (it >= 0) enumValues<T>()[it] else default }
 
-fun <T : Enum<T>> SharedPreferences.Editor.putEnum(key: String, value: T?) : SharedPreferences.Editor =
+fun <T : Enum<T>> SharedPreferences.Editor.putEnum(key: String, value: T?): SharedPreferences.Editor =
   this.putInt(key, value?.ordinal ?: -1)
 
 inline fun <reified T : Enum<T>> Parcel.readEnum() =
@@ -22,14 +22,14 @@ inline fun <reified T : Enum<T>> Parcel.readEnum() =
 fun <T : Enum<T>> Parcel.writeEnum(value: T?) =
   writeInt(value?.ordinal ?: -1)
 
-inline fun <reified T1 : Enum<T1>, T2 : Number> fromNumber(value: T2) : T1? =
+inline fun <reified T1 : Enum<T1>, T2 : Number> fromNumber(value: T2): T1? =
   enumValues<T1>().firstOrNull { it.ordinal == value }
 
-inline fun <reified T1 : Enum<T1>> fromInt(value: Int) : T1? = fromNumber<T1, Int>(value)
+inline fun <reified T1 : Enum<T1>> fromInt(value: Int): T1? = fromNumber<T1, Int>(value)
 
-inline fun <reified T1 : Enum<T1>> fromLong(value: Long) : T1? = fromNumber<T1, Long>(value)
+inline fun <reified T1 : Enum<T1>> fromLong(value: Long): T1? = fromNumber<T1, Long>(value)
 
-inline fun <reified T: Enum<T>> T.next(): T {
+inline fun <reified T : Enum<T>> T.next(): T {
   val values = enumValues<T>()
   val nextOrdinal = (ordinal + 1) % values.size
   return values[nextOrdinal]

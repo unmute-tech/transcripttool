@@ -1,10 +1,10 @@
 package io.reitmaier.transcripttool.core.data.domain
 
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.WriteWith
 import io.reitmaier.transcripttool.core.data.parcelizers.RegionIdParceler
 import io.reitmaier.transcripttool.core.data.parcelizers.TaskIdParceler
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.WriteWith
 
 @Parcelize
 data class Region(

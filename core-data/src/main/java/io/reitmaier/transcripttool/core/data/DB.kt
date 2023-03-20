@@ -5,11 +5,11 @@ import io.reitmaier.transcripttool.data.TranscriptToolDb
 import logcat.LogPriority
 import logcat.logcat
 
-private const val versionPragma = "user_version"
+private const val VERSION_PRAGMA = "user_version"
 
 fun migrateIfNeeded(driver: AndroidSqliteDriver) {
   val oldVersion =
-    driver.executeQuery(null, "PRAGMA $versionPragma", 0).use { cursor ->
+    driver.executeQuery(null, "PRAGMA $VERSION_PRAGMA", 0).use { cursor ->
       if (cursor.next()) {
         cursor.getLong(0)?.toInt()
       } else {
@@ -22,10 +22,10 @@ fun migrateIfNeeded(driver: AndroidSqliteDriver) {
   if (oldVersion == 0) {
     logcat("DB", LogPriority.INFO) { "Creating DB version $newVersion!" }
     TranscriptToolDb.Schema.create(driver)
-    driver.execute(null, "PRAGMA $versionPragma=$newVersion", 0)
+    driver.execute(null, "PRAGMA $VERSION_PRAGMA=$newVersion", 0)
   } else if (oldVersion < newVersion) {
-    logcat("DB", LogPriority.DEBUG) { "Migrating DB from version $oldVersion to $newVersion!"}
+    logcat("DB", LogPriority.DEBUG) { "Migrating DB from version $oldVersion to $newVersion!" }
     TranscriptToolDb.Schema.migrate(driver, oldVersion, newVersion)
-    driver.execute(null, "PRAGMA $versionPragma=$newVersion", 0)
+    driver.execute(null, "PRAGMA $VERSION_PRAGMA=$newVersion", 0)
   }
 }

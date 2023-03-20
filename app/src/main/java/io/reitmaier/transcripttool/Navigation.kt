@@ -51,7 +51,7 @@ private const val addRoute = "add"
 sealed class Screen(val route: String, val arguments: List<NamedNavArgument>) {
   object ListScreen : Screen(
     route = listRoute,
-    arguments = listOf(navArgument(navNewTaskId) {
+    arguments = listOf(navArgument(NAV_NEW_TASK_ID) {
       type = NavType.IntType
       defaultValue = -1
     })
@@ -64,7 +64,7 @@ sealed class Screen(val route: String, val arguments: List<NamedNavArgument>) {
 
   object TranscribeScreen : Screen(
     route = transcribeRoute,
-    arguments = listOf(navArgument(navArgTaskId) {
+    arguments = listOf(navArgument(NAV_ARG_TASK_ID) {
       type = NavType.IntType
     })
   )
@@ -72,7 +72,7 @@ sealed class Screen(val route: String, val arguments: List<NamedNavArgument>) {
   object AddScreen : Screen(
     route = addRoute,
     arguments = listOf(
-      navArgument(navArgNewAudio) {
+      navArgument(NAV_ARG_NEW_AUDIO) {
         type = ProvisionalTaskParamType()
       },
     )

@@ -9,13 +9,10 @@ data class FullTranscriptTask(
   val regions: List<Region>,
   val partialTranscripts: List<PartialTranscript>,
   val localFilePath: String,
-//  val inputtedTranscript: @WriteWith<InputtedTranscriptParceler> InputtedTranscript,
-//  val savedTranscript: @WriteWith<SavedTranscriptParceler> SavedTranscript,
-//  val submittedTranscript: @WriteWith<NullableSubmittedTranscriptParceler> SubmittedTranscript?,
 ) : Parcelable {
-  fun toNewTranscriptsRequest() : List<NewTranscript> {
+  fun toNewTranscriptsRequest(): List<NewTranscript> {
     return partialTranscripts.sortedByDescending { it.updatedAt }.map { partialTranscript ->
-      val region = regions.first { region -> region.id == partialTranscript.regionId}
+      val region = regions.first { region -> region.id == partialTranscript.regionId }
       NewTranscript(
         regionStart = region.start,
         regionEnd = region.end,
@@ -25,5 +22,3 @@ data class FullTranscriptTask(
     }
   }
 }
-
-
