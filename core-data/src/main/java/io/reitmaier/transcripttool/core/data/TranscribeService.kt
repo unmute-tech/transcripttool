@@ -249,7 +249,10 @@ class TranscribeService @Inject constructor(
           // Parse response
           runCatching {
             response.body<AuthResponse>().also { logcat { "Parsing login response" } }
-          }.mapError { ServerError.also { logcat { "Failed to parse login response" } } } // Error here is server's fault
+          }.mapError {
+            logcat { "Failed to parse login response" }
+            ServerError
+          } // Error here is server's fault
         }
     }.map { authResponse ->
       // Save and return tokens
@@ -297,7 +300,7 @@ class TranscribeService @Inject constructor(
           // Ensures refresh token is current as form submission
           // fails if refresh token is out of date
           client.post("$BASE_URL/ping")
-          val audioData = context.filesDir.resolve(provisionalTask.audio_path).readBytes()
+          val audioData = context.filesDir.resolve(provisionalTask.audioPath).readBytes()
           // Submit the Task
           client.submitFormWithBinaryData(
             url = "$BASE_URL/tasks",
@@ -350,7 +353,10 @@ class TranscribeService @Inject constructor(
         }
     }
 
-  suspend fun uploadTranscripts(remoteId: RemoteId, newTranscripts: List<NewTranscript>): DomainResult<SubmittedTranscript> {
+  suspend fun uploadTranscripts(
+    remoteId: RemoteId,
+    newTranscripts: List<NewTranscript>,
+  ): DomainResult<SubmittedTranscript> {
     return withContext(dispatcher.io) {
       runCatching {
         client.post("$BASE_URL/tasks/${remoteId.value}/transcripts") {
@@ -362,7 +368,8 @@ class TranscribeService @Inject constructor(
           if (!response.status.isSuccess()) {
             return@andThen Err(ServerError)
           }
-          val latest = newTranscripts.maxByOrNull { it.updatedAt } ?: return@andThen Err(DatabaseError)
+          val latest = newTranscripts.maxByOrNull { it.updatedAt }
+            ?: return@andThen Err(DatabaseError)
           Ok(SubmittedTranscript(latest.transcript))
         }
     }

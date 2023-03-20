@@ -2,6 +2,7 @@ package io.reitmaier.transcripttool.core.data.domain
 
 import io.reitmaier.transcripttool.core.data.parcelizers.InstantEpochSerializer
 import kotlinx.datetime.Instant
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,10 +15,13 @@ internal data class TaskDto(
   val rejectReason: RejectReason?,
 
   @Serializable(with = InstantEpochSerializer::class)
-  val created_at: Instant,
+  @SerialName("created_at")
+  val createdAt: Instant,
   @Serializable(with = InstantEpochSerializer::class)
-  val updated_at: Instant,
+  @SerialName("updated_at")
+  val updatedAt: Instant,
 
   @Serializable(with = InstantEpochSerializer::class)
-  val completed_at: Instant?,
+  @SerialName("completed_at")
+  val completedAt: Instant?,
 )

@@ -232,17 +232,17 @@ class TranscribeDatabaseImpl(
 
   override fun insertFileInfo(
     extension: String,
-    orig_uri: String,
-    orig_display_name: String?,
+    origUri: String,
+    origDisplayName: String?,
   ): File_Info {
     val timestamp = now()
     queries.insertFileInfo(
       id = null,
       extension = extension,
-      orig_uri = orig_uri,
+      orig_uri = origUri,
       created_at = timestamp,
       updated_at = timestamp,
-      orig_display_name = orig_display_name,
+      orig_display_name = origDisplayName,
     )
 
     val id = FileId(queries.rowid().executeAsOne().toInt())

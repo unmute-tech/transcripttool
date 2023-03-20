@@ -5,12 +5,14 @@ import android.os.Parcelable
 import io.reitmaier.transcripttool.core.data.parcelizers.FileIdSerializer
 import io.reitmaier.transcripttool.core.data.parcelizers.RemoteIdSerializer
 import kotlinx.datetime.Instant
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class CompleteTaskRequest(
   val difficulty: Difficulty?,
-  val completed_at: Instant,
+  @SerialName("completed_at")
+  val completedAt: Instant,
 )
 
 @Serializable

@@ -167,8 +167,8 @@ interface TranscribeDatabase {
 
   fun insertFileInfo(
     extension: String,
-    orig_uri: String,
-    orig_display_name: String?,
+    origUri: String,
+    origDisplayName: String?,
   ): File_Info
 
   fun getFileName(id: FileId): String

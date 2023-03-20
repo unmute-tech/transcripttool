@@ -125,8 +125,8 @@ class TranscriptRepo @Inject constructor(
     val displayName = getDisplayName(incomingContent.uri).get()
     val fileInfo: File_Info = database.insertFileInfo(
       extension = mimetypeExt,
-      orig_uri = incomingContent.uri.toString(),
-      orig_display_name = displayName,
+      origUri = incomingContent.uri.toString(),
+      origDisplayName = displayName,
     )
 
     return createFileFromInfo(fileInfo)
@@ -134,7 +134,7 @@ class TranscriptRepo @Inject constructor(
       .map {
         ProvisionalTask(
           fileId = fileInfo.id,
-          audio_path = it.path,
+          audioPath = it.path,
           displayName = it.name,
         )
       }
@@ -147,7 +147,7 @@ class TranscriptRepo @Inject constructor(
           it.remoteId,
           it.url,
           provisionalTask.fileId,
-          provisionalTask.audio_path,
+          provisionalTask.audioPath,
           provisionalTask.displayName,
           durationMs,
         )

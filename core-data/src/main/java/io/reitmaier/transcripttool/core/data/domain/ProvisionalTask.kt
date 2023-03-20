@@ -4,13 +4,15 @@ import android.os.Parcelable
 import io.reitmaier.transcripttool.core.data.parcelizers.FileIdParceler
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.WriteWith
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 @Parcelize
 data class ProvisionalTask(
   val fileId: @WriteWith<FileIdParceler> FileId,
-  val audio_path: String,
+  @SerialName("audio_path")
+  val audioPath: String,
   val displayName: String,
 ) : Parcelable {
   companion object {
