@@ -722,7 +722,6 @@ formatting:
     active: true
     autoCorrect: true
     indentSize: 2
-    continuationIndentSize: 2
   MaximumLineLength: # there is already another rule
     active: false
     maxLineLength: 120
