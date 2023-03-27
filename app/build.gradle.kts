@@ -81,6 +81,8 @@ android {
 dependencies {
   implementation(projects.coreData)
   implementation(projects.coreUi)
+  implementation(projects.featureAdd)
+  implementation(projects.featureList)
   implementation(projects.featureRegister)
 
   implementation(project(":feature-transcript"))

@@ -8,25 +8,31 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.*
+import androidx.media3.exoplayer.source.ClippingMediaSource
+import androidx.media3.exoplayer.source.ConcatenatingMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.DefaultExtractorsFactory
 import io.reitmaier.transcripttool.core.data.domain.PlayBackSpeed
 import io.reitmaier.transcripttool.core.data.domain.PlaybackProgress
 import io.reitmaier.transcripttool.core.data.domain.PlaybackState
 import io.reitmaier.transcripttool.core.data.domain.Region
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.logcat
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 
-@UnstableApi
 @Singleton
 class ExoAudioPlayer @Inject constructor(
-  private val context: Context
+  private val context: Context,
 ) {
   private val _playbackState = MutableStateFlow<PlaybackState>(PlaybackState.Paused)
   val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
@@ -54,12 +60,12 @@ class ExoAudioPlayer @Inject constructor(
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-      if(reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
-        logcat { "Pausing instead of transitioning to next Media Item: $reason ${mediaItem?.mediaMetadata}"}
+      if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
+        logcat { "Pausing instead of transitioning to next Media Item: $reason ${mediaItem?.mediaMetadata}" }
         exoPlayer.pause()
         exoPlayer.seekToPreviousMediaItem()
       } else {
-        logcat { "Transitioning to media item for different reason: $reason"}
+        logcat { "Transitioning to media item for different reason: $reason" }
       }
     }
 
@@ -72,16 +78,15 @@ class ExoAudioPlayer @Inject constructor(
         PlaybackState.Paused
       }
     }
-
   }
 
   val dataSourceFactory = DefaultDataSource.Factory(
     context,
-    DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
+    DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true),
   )
   val mediaSourceFactory = DefaultMediaSourceFactory(
     dataSourceFactory,
-    DefaultExtractorsFactory()
+    DefaultExtractorsFactory(),
   )
   val exoPlayer = ExoPlayer.Builder(context, mediaSourceFactory).build()
 
@@ -94,7 +99,7 @@ class ExoAudioPlayer @Inject constructor(
    */
   private val defaultDataSourceFactory = DefaultDataSource.Factory(context).createDataSource()
 
-  fun duration() : Long {
+  fun duration(): Long {
     return exoPlayer.duration
   }
 
@@ -117,17 +122,19 @@ class ExoAudioPlayer @Inject constructor(
   }
 
   fun prepare(filename: String, regions: List<Region>, speed: PlayBackSpeed = PlayBackSpeed.NORMAL) {
-    logcat { "Preparing media item $filename"}
+    logcat { "Preparing media item $filename" }
     val file = context.filesDir.resolve(filename)
     val uri = Uri.fromFile(file)
     val mediaItem = MediaItem.fromUri(uri)
     val mediaSourceItem = mediaSourceFactory.createMediaSource(mediaItem)
 //    val mediaSourceItem = buildRawMediaSource()
     val concatenatingMediaSource = ConcatenatingMediaSource()
-    for(region in regions) {
-      val clippingMediaSource= ClippingMediaSource(mediaSourceItem,
+    for (region in regions) {
+      val clippingMediaSource = ClippingMediaSource(
+        mediaSourceItem,
         region.start.milliseconds.inWholeMicroseconds,
-        region.end.milliseconds.inWholeMicroseconds)
+        region.end.milliseconds.inWholeMicroseconds,
+      )
       concatenatingMediaSource.addMediaSource(clippingMediaSource)
 //      exoPlayer.addMediaSource(clippingMediaSource)
     }
@@ -149,7 +156,7 @@ class ExoAudioPlayer @Inject constructor(
   }
 
   fun playPause() {
-    when(playbackState.value) {
+    when (playbackState.value) {
       PlaybackState.Loading -> Unit
       PlaybackState.Paused -> exoPlayer.play()
       PlaybackState.Playing -> exoPlayer.pause()
@@ -168,7 +175,6 @@ class ExoAudioPlayer @Inject constructor(
 
   fun seekTo(position: Long) {
     exoPlayer.seekTo(position)
-
   }
 
   fun clear() {
@@ -189,7 +195,7 @@ class ExoAudioPlayer @Inject constructor(
           _playbackProgress.value = PlaybackProgress(
             current = currentPosition,
             regionPosition = currentMediaItemIndex,
-            duration = duration.coerceAtLeast(0)
+            duration = duration.coerceAtLeast(0),
           )
         }
         delay(50)
@@ -204,5 +210,4 @@ class ExoAudioPlayer @Inject constructor(
   fun seekBack() {
     exoPlayer.seekBack()
   }
-
 }

@@ -15,18 +15,18 @@
  */
 
 pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-    }
+  repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+  }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+  }
 }
 
 // Generate type safe accessors when referring to other projects eg.
@@ -40,5 +40,7 @@ include(":core-data")
 include(":core-database")
 include(":core-testing")
 include(":core-ui")
-include(":feature-transcript")
+include(":feature-add")
+include(":feature-list")
 include(":feature-register")
+include(":feature-transcript")

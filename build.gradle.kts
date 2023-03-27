@@ -3,6 +3,12 @@ import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_TEST_SRC_DIR_JAVA
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_TEST_SRC_DIR_KOTLIN
 
+buildscript {
+  dependencies {
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0")
+  }
+}
+
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
