@@ -3,6 +3,7 @@ package io.reitmaier.transcripttool.feature.list.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.outlined.Star
@@ -37,6 +38,7 @@ internal fun TranscriptRow(
 ) {
   ConstraintLayout(
     modifier = modifier
+      .padding(top = 16.dp, start = 12.dp, bottom = 12.dp, end = 24.dp)
       .fillMaxWidth()
       .fillMaxHeight()
       .clickable {

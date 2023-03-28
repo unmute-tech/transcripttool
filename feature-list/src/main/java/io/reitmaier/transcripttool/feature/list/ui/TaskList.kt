@@ -82,7 +82,7 @@ internal fun TaskList(
             Box(
               modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp, 4.dp, 12.dp, 4.dp),
+                .padding(16.dp, 12.dp, 24.dp, 12.dp),
             ) {
               val stickyHeading = when (type) {
                 TaskState.NEW -> "New Tasks"
@@ -96,8 +96,8 @@ internal fun TaskList(
                 modifier = Modifier
                   .align(Alignment.CenterStart),
                 textAlign = TextAlign.Start,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSecondary,
+                style = MaterialTheme.typography.labelLarge,
               )
               when (type) {
                 TaskState.NEW -> Icon(
