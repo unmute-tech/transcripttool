@@ -63,6 +63,7 @@ import io.reitmaier.transcripttool.core.data.domain.ProvisionalTask
 import io.reitmaier.transcripttool.core.data.domain.TranscriptTask
 import io.reitmaier.transcripttool.core.data.util.IntentDispatcher
 import io.reitmaier.transcripttool.core.ui.components.IconButton
+import io.reitmaier.transcripttool.core.ui.components.IconTextButton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
@@ -75,10 +76,12 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @FlowPreview
 @Composable
-fun AddScreen(modifier: Modifier = Modifier,
-              provisionalTask: ProvisionalTask?,
-              onTaskAdded: (TranscriptTask) -> Unit,
-              navigateBack: () -> Unit) {
+fun AddScreen(
+  modifier: Modifier = Modifier,
+  provisionalTask: ProvisionalTask?,
+  onTaskAdded: (TranscriptTask) -> Unit,
+  navigateBack: () -> Unit,
+) {
   val viewModel = hiltViewModel<AddViewModel>()
   val state = viewModel.container.stateFlow.collectAsState().value
   val processIntent = viewModel.processIntent
@@ -97,7 +100,7 @@ fun AddScreen(modifier: Modifier = Modifier,
             snackbarHostState.showSnackbar("Failed to load external audio content. Navigate back to try again.")
           AddTaskSideEffect.UploadFailed ->
             snackbarHostState.showSnackbar("Failed to upload content. Please try again.")
-          is AddTaskSideEffect.UploadSucceeded ->  {
+          is AddTaskSideEffect.UploadSucceeded -> {
             onTaskAdded(it.transcriptTask)
           }
         }
@@ -166,6 +169,7 @@ private fun LoadingView(
   )
   CircularProgressIndicator()
 }
+
 @Composable
 private fun LoadErrorView(
   loadError: AddTaskState.ProcessingError,
@@ -179,7 +183,6 @@ private fun LoadErrorView(
     textAlign = TextAlign.Center,
   )
 }
-
 
 @Composable
 private fun UploadingView(
@@ -216,16 +219,16 @@ private fun LoadedView(
       textAlign = TextAlign.Start,
     )
   }
-  Row(modifier = Modifier.fillMaxWidth(),
+  Row(
+    modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.SpaceAround,
   ) {
     IconButton(
       imageVector = Icons.Filled.FastRewind,
       contentDescription = "Replay previous 10 seconds",
       modifier = Modifier
-        .size(50.dp)
-    )
-    {
+        .size(50.dp),
+    ) {
       processIntent(ViewIntent.SeekBack(loaded))
     }
     PlayPauseButton(isPlaying = loaded.playbackState == PlaybackState.Playing) {
@@ -235,7 +238,7 @@ private fun LoadedView(
       imageVector = Icons.Filled.FastForward,
       contentDescription = "Forward 10 seconds",
       modifier = Modifier
-        .size(50.dp)
+        .size(50.dp),
     ) {
       processIntent(ViewIntent.SeekForward(loaded))
     }
@@ -243,8 +246,9 @@ private fun LoadedView(
   LinearProgressIndicator(
     modifier = Modifier.fillMaxWidth(),
 
-    progress = loaded.progress)
-  Spacer(modifier = Modifier.padding(0.dp,8.dp))
+    progress = loaded.progress,
+  )
+  Spacer(modifier = Modifier.padding(0.dp, 8.dp))
   Text(
     text = "Please check that you're your happy to share the audio content with the UnMute research team.",
     style = MaterialTheme.typography.bodyMedium,
@@ -252,9 +256,10 @@ private fun LoadedView(
     overflow = TextOverflow.Visible,
     textAlign = TextAlign.Start,
   )
-  IconButton(
+  IconTextButton(
     imageVector = Icons.Outlined.Upload,
     contentDescription = "Upload",
+    text = "Upload"
   ) {
     processIntent(ViewIntent.UploadTask(loaded))
   }
@@ -272,7 +277,6 @@ private fun AddScreenContents(
     horizontalAlignment = Alignment.CenterHorizontally,
 //    verticalArrangement = Arrangement.Center,
   ) {
-
     when (state) {
       // Happy Path
       is AddTaskState.Initial -> InitialView(state, processIntent)
@@ -299,9 +303,9 @@ private fun AddScreenContents(
 private fun AddScreenAppBar(
   state: AddTaskState,
   navigateBack: () -> Unit,
-  processIntent: IntentDispatcher<ViewIntent>
+  processIntent: IntentDispatcher<ViewIntent>,
 ) {
-  val title = when(state) {
+  val title = when (state) {
     is AddTaskState.ProcessingError -> "Error Loading"
     AddTaskState.Initial -> "Receiving Audio"
     is AddTaskState.Processing -> "Processing Audio"
@@ -313,7 +317,7 @@ private fun AddScreenAppBar(
     title = { Text(title) },
     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
     actions = {
-      if(state is AddTaskState.Loaded) {
+      if (state is AddTaskState.Loaded) {
         IconButton(
           imageVector = Icons.Outlined.Check,
           contentDescription = "Add Content",
@@ -335,23 +339,22 @@ private fun AddScreenAppBar(
   )
 }
 
-
 @Composable
 @SuppressLint("UnusedTransitionTargetStateParameter")
 fun PlayPauseButton(
   isPlaying: Boolean,
   modifier: Modifier = Modifier,
-  onClick: () -> Unit
+  onClick: () -> Unit,
 ) {
   IconToggleButton(
     checked = isPlaying,
     onCheckedChange = { onClick() },
-    modifier = modifier
+    modifier = modifier,
   ) {
     val transition = updateTransition(isPlaying, label = "Play/Pause indicator")
 
     val tint by transition.animateColor(
-      label = "Tint"
+      label = "Tint",
     ) { isChecked ->
       if (isChecked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
     }
@@ -370,14 +373,14 @@ fun PlayPauseButton(
           spring(stiffness = Spring.StiffnessVeryLow)
         }
       },
-      label = "Size"
+      label = "Size",
     ) { 40.dp }
 
     Icon(
       imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-      contentDescription = if(isPlaying) "Pause" else "Play",
+      contentDescription = if (isPlaying) "Pause" else "Play",
       tint = tint,
-      modifier = Modifier.size(size)
+      modifier = Modifier.size(size),
     )
   }
 }

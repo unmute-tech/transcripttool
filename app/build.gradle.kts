@@ -84,8 +84,7 @@ dependencies {
   implementation(projects.featureAdd)
   implementation(projects.featureList)
   implementation(projects.featureRegister)
-
-  implementation(project(":feature-transcript"))
+  implementation(projects.featureTranscribe)
 
   // Core Android dependencies
   implementation(libs.androidx.core.ktx)

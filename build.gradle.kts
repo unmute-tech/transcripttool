@@ -20,7 +20,8 @@ import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_
 
 buildscript {
   dependencies {
-    classpath(libs.plugins.kotlin.gradle.get())
+    classpath(libs.plugins.kotlin.gradle.get().toString())
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0")
   }
 }
 @Suppress("DSL_SCOPE_VIOLATION") // because of https://youtrack.jetbrains.com/issue/KTIJ-19369

@@ -41,6 +41,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.reitmaier.transcripttool.core.data.TranscriptRepo
 import io.reitmaier.transcripttool.core.data.domain.IncomingContent
 import io.reitmaier.transcripttool.core.data.domain.NAV_ARG_NEW_AUDIO
+import io.reitmaier.transcripttool.core.data.domain.NAV_ARG_TASK_ID
 import io.reitmaier.transcripttool.core.data.domain.NAV_NEW_TASK_ID
 import io.reitmaier.transcripttool.core.data.domain.ProvisionalTask
 import io.reitmaier.transcripttool.core.data.domain.SavedTranscript
@@ -48,6 +49,7 @@ import io.reitmaier.transcripttool.core.data.domain.TaskId
 import io.reitmaier.transcripttool.core.ui.TranscriptToolTheme
 import io.reitmaier.transcripttool.feature.add.AddScreen
 import io.reitmaier.transcripttool.feature.list.ui.TaskListScreen
+import io.reitmaier.transcripttool.feature.transcribe.TranscribeScreen
 import io.reitmaier.transcripttool.register.RegisterScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -141,11 +143,11 @@ class MainActivity : ComponentActivity() {
             addTranscriptList(
               navController = navController,
             )
-//            addTranscriptDetail(
-//              navController = navController,
-//              nextTranscript = repo::nextTask,
-//              shareTranscript = ::shareTranscript
-//            )
+            addTranscriptDetail(
+              navController = navController,
+              nextTranscript = repo::nextTask,
+              shareTranscript = ::shareTranscript,
+            )
           },
         )
       }
@@ -164,6 +166,64 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
+  }
+}
+
+@ExperimentalAnimationApi
+@FlowPreview
+@ExperimentalTime
+@ExperimentalComposeUiApi
+@ExperimentalMaterial3Api
+@ExperimentalLayoutApi
+fun NavGraphBuilder.addTranscriptDetail(
+  navController: NavController,
+  nextTranscript: (TaskId) -> TaskId?,
+  shareTranscript: (SavedTranscript) -> Unit,
+) {
+  composable(
+    route = Screen.TranscribeScreen.route + "/{$NAV_ARG_TASK_ID}",
+    arguments = Screen.TranscribeScreen.arguments,
+    enterTransition = {
+      slideIntoContainer(
+        AnimatedContentScope.SlideDirection.Start,
+        animationSpec = tween(ANIMATION_SPEED),
+      )
+    },
+    exitTransition = {
+      slideOutOfContainer(
+        AnimatedContentScope.SlideDirection.End,
+        animationSpec = tween(ANIMATION_SPEED),
+      )
+    },
+    popEnterTransition = {
+      slideIntoContainer(
+        AnimatedContentScope.SlideDirection.End,
+        animationSpec = tween(ANIMATION_SPEED),
+      )
+    },
+  ) {
+    val navBackToList = {
+      navController.navigate(Screen.ListScreen.route + "?$NAV_NEW_TASK_ID=-1") {
+        launchSingleTop = true
+        it.destination.route?.let { transcribeRoute -> popUpTo(transcribeRoute) { inclusive = true } }
+      }
+    }
+    // TODO Add guard?
+    val taskId: TaskId = it.arguments?.getInt(NAV_NEW_TASK_ID)?.let { value -> TaskId(value) }!!
+    TranscribeScreen(
+      taskId = taskId,
+      shareTranscript = shareTranscript,
+      navigateBackToList = navBackToList,
+      navigateToNextOrBack = {
+        val nextTaskId = nextTranscript(taskId)
+        if (nextTaskId != null) {
+          logcat { "Navigating to $nextTaskId" }
+          navController.navigate("${Screen.TranscribeScreen.route}/${nextTaskId.value}")
+        } else {
+          navBackToList()
+        }
+      },
+    )
   }
 }
 

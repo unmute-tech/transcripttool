@@ -17,31 +17,17 @@
 package io.reitmaier.transcripttool
 
 import android.os.Bundle
-import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import io.reitmaier.transcripttool.core.data.domain.*
-import io.reitmaier.transcripttool.feature.transcript.ui.TranscriptScreen
+import io.reitmaier.transcripttool.core.data.domain.NAV_ARG_NEW_AUDIO
+import io.reitmaier.transcripttool.core.data.domain.NAV_ARG_TASK_ID
+import io.reitmaier.transcripttool.core.data.domain.NAV_NEW_TASK_ID
+import io.reitmaier.transcripttool.core.data.domain.ProvisionalTask
+import io.reitmaier.transcripttool.core.data.domain.TaskId
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import logcat.logcat
-
-@Composable
-fun MainNavigation() {
-    val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = "main") {
-        composable("main") { TranscriptScreen(modifier = Modifier.padding(16.dp)) }
-        // TODO: Add more destinations
-    }
-}
 
 private const val listRoute = "taskList"
 private const val registerRoute = "register"
@@ -51,22 +37,26 @@ private const val addRoute = "add"
 sealed class Screen(val route: String, val arguments: List<NamedNavArgument>) {
   object ListScreen : Screen(
     route = listRoute,
-    arguments = listOf(navArgument(NAV_NEW_TASK_ID) {
-      type = NavType.IntType
-      defaultValue = -1
-    })
+    arguments = listOf(
+      navArgument(NAV_NEW_TASK_ID) {
+        type = NavType.IntType
+        defaultValue = -1
+      },
+    ),
   )
 
   object RegisterScreen : Screen(
     route = registerRoute,
-    arguments = emptyList()
+    arguments = emptyList(),
   )
 
   object TranscribeScreen : Screen(
     route = transcribeRoute,
-    arguments = listOf(navArgument(NAV_ARG_TASK_ID) {
-      type = NavType.IntType
-    })
+    arguments = listOf(
+      navArgument(NAV_ARG_TASK_ID) {
+        type = NavType.IntType
+      },
+    ),
   )
 
   object AddScreen : Screen(
@@ -75,9 +65,8 @@ sealed class Screen(val route: String, val arguments: List<NamedNavArgument>) {
       navArgument(NAV_ARG_NEW_AUDIO) {
         type = ProvisionalTaskParamType()
       },
-    )
+    ),
   )
-
 }
 
 class TaskIdParamType : NavType<TaskId>(isNullableAllowed = true) {
@@ -87,7 +76,7 @@ class TaskIdParamType : NavType<TaskId>(isNullableAllowed = true) {
 
   override fun parseValue(value: String): TaskId {
     logcat { value }
-    return Json.decodeFromString<TaskId>(value)
+    return Json.decodeFromString(value)
   }
 
   override fun put(bundle: Bundle, key: String, value: TaskId) {
@@ -101,7 +90,7 @@ class ProvisionalTaskParamType : NavType<ProvisionalTask>(isNullableAllowed = fa
 
   override fun parseValue(value: String): ProvisionalTask {
     logcat { value }
-    return Json.decodeFromString<ProvisionalTask>(value)
+    return Json.decodeFromString(value)
   }
 
   override fun put(bundle: Bundle, key: String, value: ProvisionalTask) {

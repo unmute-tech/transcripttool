@@ -19,19 +19,19 @@ plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.kapt)
+  alias(libs.plugins.kotlin.parcelize)
 }
 
 val javaVersion: JavaVersion by rootProject.extra
 
 android {
-  namespace = "io.reitmaier.transcripttool.feature.transcript"
+  namespace = "io.reitmaier.transcripttool.feature.list"
   compileSdk = libs.versions.android.compileSdk.get().toInt()
 
   defaultConfig {
     minSdk = libs.versions.android.minSdk.get().toInt()
 
     testInstrumentationRunner = "io.reitmaier.transcripttool.core.testing.HiltTestRunner"
-    consumerProguardFiles("consumer-rules.pro")
   }
 
   buildFeatures {
@@ -57,12 +57,16 @@ android {
 }
 
 dependencies {
-  implementation(project(":core-data"))
-  implementation(project(":core-ui"))
+  implementation(projects.coreData)
+  implementation(projects.coreUi)
   androidTestImplementation(project(":core-testing"))
 
   // Core Android dependencies
   implementation(libs.androidx.activity.compose)
+  implementation(libs.androidx.constraintlayout.compose)
+
+  // logcat
+  implementation(libs.logcat)
 
   // Arch Components
   implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -70,9 +74,21 @@ dependencies {
   implementation(libs.androidx.hilt.navigation.compose)
 
   // Compose
+  implementation(libs.androidx.compose.material.icons.core)
+  implementation(libs.androidx.compose.material.icons.extended)
+  implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling.preview)
-  implementation(libs.androidx.compose.material3)
+
+  // monads
+  implementation(libs.kotlin.result)
+  implementation(libs.kotlin.result.coroutines)
+  implementation(libs.kotlin.retry)
+
+  // MVI
+  implementation(libs.orbitmvi.core)
+  implementation(libs.orbitmvi.viewmodel)
+
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
   // Instrumented tests

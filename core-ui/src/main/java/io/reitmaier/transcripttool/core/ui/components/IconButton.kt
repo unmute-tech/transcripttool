@@ -1,16 +1,16 @@
 package io.reitmaier.transcripttool.core.ui.components
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun IconButton(
@@ -33,3 +33,16 @@ fun IconButton(
     )
   }
 }
+
+@Preview
+@Composable
+private fun IconButtonPreview() {
+  IconButton(
+    imageVector = Icons.Filled.Search,
+    contentDescription = "Search",
+  ) {}
+}
+
+
+
+
