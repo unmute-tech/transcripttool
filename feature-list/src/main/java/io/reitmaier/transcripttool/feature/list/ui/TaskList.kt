@@ -8,13 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -52,7 +48,7 @@ internal fun TaskList(
   Box(
     modifier = modifier
       .fillMaxSize()
-      .pullRefresh(pullRefreshState)
+      .pullRefresh(pullRefreshState),
   ) {
     LazyColumn(
       modifier = modifier
@@ -82,7 +78,7 @@ internal fun TaskList(
             Box(
               modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp, 12.dp, 24.dp, 12.dp),
+                .padding(16.dp, 12.dp, 16.dp, 12.dp),
             ) {
               val stickyHeading = when (type) {
                 TaskState.NEW -> "New Tasks"
@@ -134,36 +130,26 @@ internal fun TaskList(
         }
         items(tasks.taskList.size) { i ->
           val item = tasks.taskList[i]
-          Card(
-            elevation = CardDefaults.elevatedCardElevation(),
+          TranscriptRow(
+            item = item,
+            newTaskId = newTaskId,
             modifier = Modifier
-              .padding(4.dp)
               .fillParentMaxWidth(),
-//              contentColor = Color.Blue,
-//              modifier = paddingModifier
-          ) {
-            TranscriptRow(
-              item = item,
-              newTaskId = newTaskId,
-              modifier = Modifier
-                .padding(4.dp)
-                .fillParentMaxWidth(),
-              onDelete = {
-                //     processIntent(ViewIntent.RemoveTranscript(it))
-                logcat("MainActivity", LogPriority.DEBUG) { "Initialising Delete Transcript" }
-              },
-              onClick = {
-                navigateToDetailScreen(item.id)
-              },
-            )
-          }
+            onDelete = {
+              //     processIntent(ViewIntent.RemoveTranscript(it))
+              logcat("MainActivity", LogPriority.DEBUG) { "Initialising Delete Transcript" }
+            },
+            onClick = {
+              navigateToDetailScreen(item.id)
+            },
+          )
         }
       }
     }
     PullRefreshIndicator(
       refreshing = isRefreshing,
       state = pullRefreshState,
-      modifier = Modifier.align(Alignment.TopCenter)
+      modifier = Modifier.align(Alignment.TopCenter),
     )
   }
 }

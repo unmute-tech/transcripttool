@@ -38,7 +38,7 @@ internal fun TranscriptRow(
 ) {
   ConstraintLayout(
     modifier = modifier
-      .padding(top = 16.dp, start = 12.dp, bottom = 12.dp, end = 24.dp)
+      .padding(top = 16.dp, start = 12.dp, bottom = 12.dp, end = 12.dp)
       .fillMaxWidth()
       .fillMaxHeight()
       .clickable {
