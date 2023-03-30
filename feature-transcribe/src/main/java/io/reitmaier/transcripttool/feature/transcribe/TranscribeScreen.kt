@@ -39,10 +39,8 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,6 +56,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -326,9 +325,20 @@ private fun TranscribeAppBar(
     is TranscriptTaskState.Loaded -> "Transcribe Audio"
     is TranscriptTaskState.Error -> "Error"
   }
-  CenterAlignedTopAppBar(
+  // TODO enable based on submission
+  TopAppBar(
     title = { Text(title) },
-    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
+//    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
+    colors = TopAppBarDefaults.topAppBarColors(),
+    navigationIcon = {
+      IconButton(
+        imageVector = Icons.Outlined.ArrowBack,
+        contentDescription = "Navigate Back",
+        onClick = {
+          navigateBack()
+        },
+      )
+    },
     actions = {
       state.let {
         if (it is TranscriptTaskState.Loaded) {
@@ -350,15 +360,6 @@ private fun TranscribeAppBar(
           }
         }
       }
-    },
-    navigationIcon = {
-      IconButton(
-        imageVector = Icons.Outlined.ArrowBack,
-        contentDescription = "Navigate Back",
-        onClick = {
-          navigateBack()
-        },
-      )
     },
   )
 }
@@ -518,7 +519,10 @@ private fun TranscribeContents(
         text = "${data.playBackSpeed.value}x",
         enabled = true,
         contentDescription = "Playback Speed",
-        buttonColors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground),
+        buttonColors = ButtonDefaults.buttonColors(
+          containerColor = Color.Transparent,
+          contentColor = MaterialTheme.colorScheme.onBackground,
+        ),
         modifier = Modifier
           .constrainAs(speed) {
 //            centerHorizontallyTo(parent)

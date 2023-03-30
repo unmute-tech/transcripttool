@@ -39,7 +39,7 @@ val LightDefaultColorScheme = lightColorScheme(
   onErrorContainer = Red10,
   background = DarkPurpleGray99,
   onBackground = DarkPurpleGray10,
-  surface = DarkPurpleGray99,
+  surface = DarkPurpleGray95,
   onSurface = DarkPurpleGray10,
   surfaceVariant = PurpleGray90,
   onSurfaceVariant = PurpleGray30,
@@ -190,6 +190,7 @@ fun TranscriptToolTheme(
 
     else -> if (darkTheme) DarkDefaultColorScheme else LightDefaultColorScheme
   }
+
   // Gradient colors
   val emptyGradientColors = GradientColors(container = colorScheme.surfaceColorAtElevation(2.dp))
   val defaultGradientColors = GradientColors(
