@@ -45,7 +45,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -96,11 +95,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import io.reitmaier.transcripttool.core.data.domain.Difficulty
 import io.reitmaier.transcripttool.core.data.domain.FullTranscriptTask
 import io.reitmaier.transcripttool.core.data.domain.InputtedTranscript
+import io.reitmaier.transcripttool.core.data.domain.RejectReason
 import io.reitmaier.transcripttool.core.data.domain.SavedTranscript
 import io.reitmaier.transcripttool.core.data.domain.SubmittedTranscript
 import io.reitmaier.transcripttool.core.data.domain.TaskId
 import io.reitmaier.transcripttool.core.data.domain.TranscriptTask
 import io.reitmaier.transcripttool.core.data.util.IntentDispatcher
+import io.reitmaier.transcripttool.core.ui.components.BottomSheetListItem
 import io.reitmaier.transcripttool.core.ui.components.IconButton
 import io.reitmaier.transcripttool.core.ui.components.IconTextButton
 import io.reitmaier.transcripttool.core.ui.components.PlayPauseButton
@@ -268,41 +269,54 @@ fun TranscribeScreen(
             .imePadding()
             .height(200.dp)
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.surface),
         ) {
           Column(
             modifier = modifier
               .fillMaxSize()
+              .background(MaterialTheme.colorScheme.surface)
               .padding(8.dp),
           ) {
             Text("Mark content as:", style = MaterialTheme.typography.headlineSmall)
-            ListItem(
-              headlineContent = { Text("Inappropriate") },
-              leadingContent = {
-                Icon(
-                  Icons.Filled.Block,
-                  contentDescription = "Inappropriate Content",
-                )
-              },
-            )
-            ListItem(
-              headlineContent = { Text("Underage Content") },
-              leadingContent = {
-                Icon(
-                  Icons.Filled.Block,
-                  contentDescription = "Underage Content",
-                )
-              },
-            )
-            ListItem(
-              headlineContent = { Text("Blank / Background Noise") },
-              leadingContent = {
-                Icon(
-                  Icons.Filled.Block,
-                  contentDescription = "Blank / Background Noise",
-                )
-              },
-            )
+            BottomSheetListItem(
+              icon = Icons.Filled.Block,
+              title = "Inappropriate",
+              contentDescription = "Inappropriate Content",
+            ) {
+              scope.launch {
+                bottomSheetState.hide()
+                if (!bottomSheetState.isVisible) {
+                  openBottomSheet = false
+                }
+                processIntent(ViewIntent.RejectTask(RejectReason.INAPPROPRIATE))
+              }
+            }
+            BottomSheetListItem(
+              icon = Icons.Filled.Block,
+              title = "Underage Content",
+              contentDescription = "Underage Content",
+            ) {
+              scope.launch {
+                bottomSheetState.hide()
+                if (!bottomSheetState.isVisible) {
+                  openBottomSheet = false
+                }
+                processIntent(ViewIntent.RejectTask(RejectReason.UNDERAGE))
+              }
+            }
+            BottomSheetListItem(
+              icon = Icons.Filled.Block,
+              title = "Blank / Background Noise",
+              contentDescription = "Blank Content",
+            ) {
+              scope.launch {
+                bottomSheetState.hide()
+                if (!bottomSheetState.isVisible) {
+                  openBottomSheet = false
+                }
+                processIntent(ViewIntent.RejectTask(RejectReason.BLANK))
+              }
+            }
           }
         }
       }
@@ -778,21 +792,4 @@ private fun CompleteAlertDialog(
     title = { Text(text = "Please confirm") },
     text = { Text(text = "Is the transcript complete and ready to be submitted?") },
   )
-}
-
-@Composable
-fun BottomSheetListItem(icon: ImageVector, title: String, contentDescription: String, onItemClick: (String) -> Unit) {
-  Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .clickable(onClick = { onItemClick(title) })
-      .height(55.dp)
-      .background(color = MaterialTheme.colorScheme.background)
-      .padding(start = 16.dp),
-    verticalAlignment = Alignment.CenterVertically,
-  ) {
-    Icon(imageVector = icon, contentDescription = contentDescription, tint = MaterialTheme.colorScheme.onBackground)
-    Spacer(modifier = Modifier.width(20.dp))
-    Text(text = title, color = MaterialTheme.colorScheme.onBackground)
-  }
 }
