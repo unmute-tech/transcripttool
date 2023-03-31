@@ -203,17 +203,10 @@ private fun LoadedView(
   loaded: AddTaskState.Loaded,
   processIntent: IntentDispatcher<ViewIntent>,
 ) {
-  Column {
-    Text(
-      text = "Loaded Audio Content:",
-      style = MaterialTheme.typography.headlineMedium,
-      maxLines = 1,
-      overflow = TextOverflow.Visible,
-      textAlign = TextAlign.Start,
-    )
+  Column () {
     Text(
       text = loaded.provisionalTask.displayName,
-      style = MaterialTheme.typography.headlineSmall,
+      style = MaterialTheme.typography.labelLarge,
       maxLines = 1,
       overflow = TextOverflow.Visible,
       textAlign = TextAlign.Start,
@@ -256,6 +249,7 @@ private fun LoadedView(
     overflow = TextOverflow.Visible,
     textAlign = TextAlign.Start,
   )
+  Spacer(modifier = Modifier.padding(0.dp, 16.dp))
   IconTextButton(
     imageVector = Icons.Outlined.Upload,
     contentDescription = "Upload",
