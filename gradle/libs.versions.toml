@@ -32,7 +32,7 @@ ktor = "2.2.4"
 logcat = "0.1"
 media3 = "1.0.0"
 orbitMVI = "4.6.1"
-result = "1.1.16"
+result = "1.1.17"
 retry = "1.0.9"
 sqlDelight = "1.5.5"
 
