@@ -2,7 +2,7 @@
 accomponist = "0.30.0"
 android-compileSdk = "33"
 android-minSdk = "21"
-android-targetSdk = "33"
+android-targetSdk = "33" # Also in AndroidManifest.xml
 androidGradlePlugin = "7.4.2"
 androidXDoucmentFile = "1.0.1"
 androidxActivity = "1.7.0"
