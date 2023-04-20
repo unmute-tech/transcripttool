@@ -19,8 +19,19 @@ import io.reitmaier.transcripttool.core.data.domain.ProvisionalTask
 import io.reitmaier.transcripttool.core.data.domain.TranscriptTask
 import io.reitmaier.transcripttool.core.data.util.IntentDispatcher
 import io.reitmaier.transcripttool.core.ui.player.ExoAudioPlayer
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.parcelize.Parcelize
 import logcat.logcat
 import org.orbitmvi.orbit.Container
@@ -44,6 +55,7 @@ internal sealed class ViewIntent {
 
 sealed class AddTaskSideEffect {
   object LoadingFailed : AddTaskSideEffect()
+
   //  object LoadingSucceeded : AddTaskSideEffect()
   data class UploadSucceeded(val transcriptTask: TranscriptTask) : AddTaskSideEffect()
   object UploadFailed : AddTaskSideEffect()
@@ -51,53 +63,55 @@ sealed class AddTaskSideEffect {
 sealed class AddTaskState : Parcelable {
 
   @Parcelize
-  object Initial: AddTaskState(), Parcelable
+  object Initial : AddTaskState(), Parcelable
 
   @Parcelize
-  data class Processing(val provisionalTask: ProvisionalTask): AddTaskState(), Parcelable {
+  data class Processing(val provisionalTask: ProvisionalTask) : AddTaskState(), Parcelable {
     companion object {
       val Preview = Processing(ProvisionalTask.Preview)
     }
   }
 
   @Parcelize
-  data class Loaded(val provisionalTask: ProvisionalTask,
-                    val durationMs: Long,
-                    val playbackState: PlaybackState,
-                    val progress: Float = 0.0f
-  ): AddTaskState(), Parcelable {
+  data class Loaded(
+    val provisionalTask: ProvisionalTask,
+    val durationMs: Long,
+    val playbackState: PlaybackState,
+    val progress: Float = 0.0f,
+  ) : AddTaskState(), Parcelable {
     companion object {
       val Preview = Loaded(ProvisionalTask.Preview, 60_000L, PlaybackState.Playing, 0.5f)
     }
   }
 
   @Parcelize
-  data class Uploading(val provisionalTask: ProvisionalTask,
-                       val durationMs: Long,
-                       val progress: Float,
-  ): AddTaskState(), Parcelable {
+  data class Uploading(
+    val provisionalTask: ProvisionalTask,
+    val durationMs: Long,
+    val progress: Float,
+  ) : AddTaskState(), Parcelable {
     companion object {
       val Preview = Uploading(ProvisionalTask.Preview, 60_000L, 0.66f)
     }
   }
 
   @Parcelize
-  data class UploadingError(val provisionalTask: ProvisionalTask,
-                            val durationMs: Long,
-                            val error: DomainMessage,
-  ): AddTaskState(), Parcelable {
+  data class UploadingError(
+    val provisionalTask: ProvisionalTask,
+    val durationMs: Long,
+    val error: DomainMessage,
+  ) : AddTaskState(), Parcelable {
     companion object {
       val Preview = UploadingError(ProvisionalTask.Preview, 60_000L, NetworkError(Throwable("Demo")))
     }
   }
 
   @Parcelize
-  data class ProcessingError(val error: DomainMessage): AddTaskState(), Parcelable {
+  data class ProcessingError(val error: DomainMessage) : AddTaskState(), Parcelable {
     companion object {
       val Preview = ProcessingError(IOError)
     }
   }
-
 }
 
 @ExperimentalTime
@@ -109,19 +123,22 @@ class AddViewModel @Inject constructor(
   private val repo: TranscriptRepo,
   private val exoAudioPlayer: ExoAudioPlayer,
   private val dispatchers: CoroutineDispatchers,
-) : ViewModel(),  ContainerHost<AddTaskState, AddTaskSideEffect> {
+) : ViewModel(), ContainerHost<AddTaskState, AddTaskSideEffect> {
   private val _intentFlow = MutableSharedFlow<ViewIntent>(extraBufferCapacity = 64)
   internal val processIntent: IntentDispatcher<ViewIntent> = { _intentFlow.tryEmit(it) }
 
-  override val container : Container<AddTaskState, AddTaskSideEffect> =
+  override val container: Container<AddTaskState, AddTaskSideEffect> =
     container(AddTaskState.Initial, savedStateHandle) { }
 
   private fun processProvisionalTask(task: ProvisionalTask?): Unit = intent {
     // Do nothing if we're not in the initial state
-    if(state !is AddTaskState.Initial) return@intent Unit.also { logcat { "Already processing task with state: $state" } }
+    if (state !is AddTaskState.Initial) {
+      logcat { "Already processing task with state: $state" }
+      return@intent
+    }
 
-    logcat{"Processing $task"}
-    if(task != null) {
+    logcat { "Processing $task" }
+    if (task != null) {
       reduce { AddTaskState.Processing(task) }
       // Access exoplayer on main thread
       withContext(dispatchers.main) {
@@ -150,22 +167,20 @@ class AddViewModel @Inject constructor(
           failure = {
             postSideEffect(AddTaskSideEffect.LoadingFailed)
             reduce { AddTaskState.ProcessingError(it) }
-          }
+          },
         )
-    }
-    else {
+    } else {
       postSideEffect(AddTaskSideEffect.LoadingFailed)
       reduce { AddTaskState.ProcessingError(LoadingError) }
     }
-
   }
 
-  private fun addTask( loadedState: AddTaskState.Loaded) : Unit = intent {
+  private fun addTask(loadedState: AddTaskState.Loaded): Unit = intent {
     reduce {
       AddTaskState.Uploading(
         loadedState.provisionalTask,
         loadedState.durationMs,
-        progress = 0f
+        progress = 0f,
       )
     }
     // TODO Track upload progress
@@ -177,10 +192,10 @@ class AddViewModel @Inject constructor(
           AddTaskState.UploadingError(
             loadedState.provisionalTask,
             loadedState.durationMs,
-            it
+            it,
           )
         }
-      }
+      },
     )
   }
 
@@ -189,7 +204,6 @@ class AddViewModel @Inject constructor(
     exoAudioPlayer.pause()
     exoAudioPlayer.clear()
   }
-
 
   init {
     // Handle ViewIntents
@@ -203,7 +217,7 @@ class AddViewModel @Inject constructor(
 //      }
       // Update inputtedTranscript straightaway
       .onEach { viewIntent ->
-        when(viewIntent) {
+        when (viewIntent) {
           is ViewIntent.UploadTask -> {
             exoAudioPlayer.pause()
             addTask(viewIntent.loadedState)
@@ -217,9 +231,8 @@ class AddViewModel @Inject constructor(
       .stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
-        0L
+        0L,
       )
-
 
     // Collect Playback State
     exoAudioPlayer.playbackState
@@ -227,9 +240,9 @@ class AddViewModel @Inject constructor(
       .onEach { playbackState ->
         intent {
           state.let {
-            when(it) {
+            when (it) {
               is AddTaskState.Initial -> Unit // Do Nothing
-              is AddTaskState.Loaded -> reduce { it.copy(playbackState = playbackState)}
+              is AddTaskState.Loaded -> reduce { it.copy(playbackState = playbackState) }
               is AddTaskState.Processing -> Unit
               is AddTaskState.ProcessingError -> Unit
               is AddTaskState.Uploading -> Unit
@@ -241,7 +254,7 @@ class AddViewModel @Inject constructor(
       .stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
-        0L
+        0L,
       )
 
     // Collect Playback Progress
@@ -255,9 +268,10 @@ class AddViewModel @Inject constructor(
               is AddTaskState.Processing,
               is AddTaskState.ProcessingError,
               is AddTaskState.Uploading,
-              is AddTaskState.UploadingError -> Unit
+              is AddTaskState.UploadingError,
+              -> Unit
               is AddTaskState.Loaded -> {
-                val progress = (playbackProgress.current.toFloat() / playbackProgress.duration).coerceIn(0.0f,1.0f)
+                val progress = (playbackProgress.current.toFloat() / playbackProgress.duration).coerceIn(0.0f, 1.0f)
                 reduce { it.copy(progress = progress) }
               }
             }
@@ -267,7 +281,7 @@ class AddViewModel @Inject constructor(
       .stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
-        0L
+        0L,
       )
   }
 

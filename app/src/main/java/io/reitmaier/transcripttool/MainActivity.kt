@@ -76,6 +76,7 @@ class MainActivity : ComponentActivity() {
   @Inject
   lateinit var repo: TranscriptRepo
 
+  @Suppress("DEPRECATION")
   private fun processIntent(intent: Intent): IncomingContent? {
     val incomingContent: IncomingContent? =
       if (intent.action == Intent.ACTION_SEND && intent.type?.startsWith("audio/") == true) {
