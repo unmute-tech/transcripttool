@@ -1,0 +1,9 @@
+* TranscriptTool App
+
+The ~TranscriptTool~ app allows users to manually transcribe audio data and scaffolds the transcription task by splitting longer pieces of audio into, smaller, more manageable chunks.
+
+[[./screenshots/transcripttool1.png]]
+
+** Setup
+
+[[./core-data/src/main/java/io/reitmaier/transcripttool/core/data/TranscribeService.kt][TranscribeService.kt]]

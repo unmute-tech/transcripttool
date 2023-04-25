@@ -427,8 +427,6 @@ class TranscribeService @Inject constructor(
   }
 
   companion object {
-    const val BASE_URL: String = "https://transcriptapi.reitmaier.xyz"
-//    const val BASE_URL: String = "https://sidebyside.reitmaier.xyz"
-//    const val BASE_URL: String = "https://transcribeapi.reitmaier.xyz"
+    const val BASE_URL: String = "https://transcripttool.example.com/"
   }
 }
