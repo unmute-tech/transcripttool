@@ -30,6 +30,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 
+@UnstableApi
 @Singleton
 class ExoAudioPlayer @Inject constructor(
   private val context: Context,
