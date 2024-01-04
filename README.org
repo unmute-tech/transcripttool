@@ -5,4 +5,4 @@ The ~TranscriptTool~ app allows users to manually transcribe audio data and scaf
 [[./screenshots/transcripttool1.png]]
 
 ** Setup
-The only essential configuration step for the ~TranscriptTool~ app is to configure the ~BASE_URL~ parameter in the [[./core-data/src/main/java/io/reitmaier/transcripttool/core/data/TranscribeService.kt][TranscribeService.kt]] file in order to allow the app to download and submit transcription tasks from the [[https://github.com/treitmaier/TranscribeApi][TranscriptTool Api Server]].
+The only essential configuration step for the ~TranscriptTool~ app is to configure the ~BASE_URL~ parameter in the [[./core-data/src/main/java/io/reitmaier/transcripttool/core/data/TranscribeService.kt][TranscribeService.kt]] file in order to allow the app to download and submit transcription tasks from the [[https://github.com/unmute-tech/transcripttool-api][TranscriptTool Api Server]].
