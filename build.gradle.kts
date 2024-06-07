@@ -1,7 +1,5 @@
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_SRC_DIR_JAVA
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_SRC_DIR_KOTLIN
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_TEST_SRC_DIR_JAVA
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension.Companion.DEFAULT_TEST_SRC_DIR_KOTLIN
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -23,11 +21,10 @@ buildscript {
     classpath(libs.plugins.kotlin.gradle.get().toString())
   }
 }
-@Suppress("DSL_SCOPE_VIOLATION") // because of https://youtrack.jetbrains.com/issue/KTIJ-19369
+
 plugins {
   alias(libs.plugins.android.application) apply false
   alias(libs.plugins.android.library) apply false
-  alias(libs.plugins.detekt)
   alias(libs.plugins.hilt.gradle) apply false
   alias(libs.plugins.kotlin.android) apply false
   alias(libs.plugins.kotlin.kapt) apply false
@@ -35,29 +32,45 @@ plugins {
   alias(libs.plugins.kotlin.serialization) apply false
   alias(libs.plugins.ksp) apply false
   alias(libs.plugins.sqldelight) apply false
+  alias(libs.plugins.compose.compiler) apply false
+
+  alias(libs.plugins.version.catalog.update)
+  alias(libs.plugins.ben.manes.versions)
 }
 // Root build.gradle.kts
 val javaVersion by extra { JavaVersion.VERSION_11 }
 
-allprojects {
-  apply {
-    plugin(rootProject.libs.plugins.detekt.get().pluginId)
-  }
 
-  dependencies {
-    detektPlugins(rootProject.libs.io.gitlab.arturbosch.detekt.formatting)
-  }
 
-  detekt {
-    source = files(
-      "src",
-      DEFAULT_SRC_DIR_JAVA,
-      DEFAULT_TEST_SRC_DIR_JAVA,
-      DEFAULT_SRC_DIR_KOTLIN,
-      DEFAULT_TEST_SRC_DIR_KOTLIN,
-    )
-    toolVersion = rootProject.libs.versions.detekt.get()
-    config = rootProject.files("config/detekt/detekt.yml")
-    parallel = true
+versionCatalogUpdate {
+  // sort the catalog by key (default is true)
+  sortByKey.set(true)
+
+  keep {
+    // keep versions without any library or plugin reference
+    keepUnusedVersions.set(true)
+    // keep all libraries that aren't used in the project
+    keepUnusedLibraries.set(true)
+    // keep all plugins that aren't used in the project
+    keepUnusedPlugins.set(true)
   }
 }
+fun isNonStable(version: String): Boolean {
+  val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
+  val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+  val isStable = stableKeyword || regex.matches(version)
+  return isStable.not()
+}
+// https://github.com/ben-manes/gradle-versions-plugin
+tasks.withType<DependencyUpdatesTask> {
+  resolutionStrategy {
+    componentSelection {
+      all {
+        if (isNonStable(candidate.version) && !isNonStable(currentVersion)) {
+          reject("Release candidate")
+        }
+      }
+    }
+  }
+}
+

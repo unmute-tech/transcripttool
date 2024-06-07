@@ -130,7 +130,7 @@ class AddViewModel @Inject constructor(
   override val container: Container<AddTaskState, AddTaskSideEffect> =
     container(AddTaskState.Initial, savedStateHandle) { }
 
-  private fun processProvisionalTask(task: ProvisionalTask?): Unit = intent {
+  private fun processProvisionalTask(task: ProvisionalTask?) = intent {
     // Do nothing if we're not in the initial state
     if (state !is AddTaskState.Initial) {
       logcat { "Already processing task with state: $state" }
@@ -175,7 +175,7 @@ class AddViewModel @Inject constructor(
     }
   }
 
-  private fun addTask(loadedState: AddTaskState.Loaded): Unit = intent {
+  private fun addTask(loadedState: AddTaskState.Loaded) = intent {
     reduce {
       AddTaskState.Uploading(
         loadedState.provisionalTask,

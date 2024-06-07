@@ -14,10 +14,10 @@ import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.toResultOr
-import com.github.michaelbull.retry.retry
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -100,6 +100,11 @@ class TranscribeService @Inject constructor(
         )
       }
       expectSuccess = false
+
+      install(HttpRequestRetry) {
+        retryOnServerErrors(maxRetries = 5)
+        exponentialDelay()
+      }
     }
   }
   private val client by lazy {
@@ -112,6 +117,10 @@ class TranscribeService @Inject constructor(
             ignoreUnknownKeys = true
           },
         )
+      }
+      install(HttpRequestRetry) {
+        retryOnServerErrors(maxRetries = 5)
+        exponentialDelay()
       }
       expectSuccess = false
       install(Auth) {
@@ -295,33 +304,31 @@ class TranscribeService @Inject constructor(
   suspend fun submitTask(provisionalTask: ProvisionalTask, durationMs: Long): ApiResult<RemoteTask> =
     withContext(dispatcher.io) {
       logcat { "Submitting task to API Server: $provisionalTask" }
-      retry {
-        runCatching {
-          // Ensures refresh token is current as form submission
-          // fails if refresh token is out of date
-          client.post("$BASE_URL/ping")
-          val audioData = context.filesDir.resolve(provisionalTask.audioPath).readBytes()
-          // Submit the Task
-          client.submitFormWithBinaryData(
-            url = "$BASE_URL/tasks",
-            formData = formData {
-              append("length", durationMs.toString())
-              append(
-                "file",
-                audioData,
-                Headers.build {
-                  append(HttpHeaders.ContentDisposition, "filename=${provisionalTask.displayName}")
-                },
-              )
-            },
-          ) {
-            // Track progress
-            onUpload { bytesSentTotal, contentLength ->
-              logcat { "Sent $bytesSentTotal bytes from $contentLength" }
-            }
+      runCatching {
+        // Ensures refresh token is current as form submission
+        // fails if refresh token is out of date
+        client.post("$BASE_URL/ping")
+        val audioData = context.filesDir.resolve(provisionalTask.audioPath).readBytes()
+        // Submit the Task
+        client.submitFormWithBinaryData(
+          url = "$BASE_URL/tasks",
+          formData = formData {
+            append("length", durationMs.toString())
+            append(
+              "file",
+              audioData,
+              Headers.build {
+                append(HttpHeaders.ContentDisposition, "filename=${provisionalTask.displayName}")
+              },
+            )
+          },
+        ) {
+          // Track progress
+          onUpload { bytesSentTotal, contentLength ->
+            logcat { "Sent $bytesSentTotal bytes from $contentLength" }
           }
-        }.mapError { NetworkError(it) } // Failure is likely due to network
-      }
+        }
+      }.mapError { NetworkError(it) } // Failure is likely due to network
         .andThen { response ->
           logcat { "Upload response: $response" }
           if (response.status == HttpStatusCode.Created) {

@@ -7,8 +7,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.michaelbull.result.Err
-import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.fold
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reitmaier.transcripttool.core.data.TranscriptRepo
@@ -123,7 +121,8 @@ data class ConfirmationInfo(
 @FlowPreview
 @HiltViewModel
 @OptIn(OrbitExperimental::class)
-class TranscribeViewModel @Inject constructor(
+class TranscribeViewModel
+@Inject constructor(
   savedStateHandle: SavedStateHandle,
   private val repo: TranscriptRepo,
   private val exoAudioPlayer: ExoAudioPlayer,
@@ -142,38 +141,37 @@ class TranscribeViewModel @Inject constructor(
       savedStateHandle = savedStateHandle,
     ) { loadTranscriptTask(taskId) }
 
-  private fun loadTranscriptTask(id: TaskId): Unit = intent {
+  private fun loadTranscriptTask(id: TaskId) = intent {
     // Enter Loading State
     reduce { TranscriptTaskState.Loading(id = id) }
-
-    when (val taskResult = repo.getFullTranscriptTask(id)) {
-      is Ok -> {
+    repo.getFullTranscriptTask(id).fold(
+      success = {
         withContext(Dispatchers.Main) {
-          exoAudioPlayer.prepare(taskResult.value.localFilePath, taskResult.value.regions, repo.getPlayBackSpeed())
+          exoAudioPlayer.prepare(it.localFilePath, it.regions, repo.getPlayBackSpeed())
           // Wait for file to be loaded
           exoAudioPlayer.playbackState.filter { it is PlaybackState.Paused }.first()
           reduce {
             TranscriptTaskState.Loaded(
-              id = taskResult.value.task.id,
-              transcript = taskResult.value,
+              id = it.task.id,
+              transcript = it,
               inputtedTranscript = TextFieldValue(
-                text = taskResult.value.task.inputtedTranscript.value,
+                text = it.task.inputtedTranscript.value,
                 // Place cursor at end
-                selection = TextRange(taskResult.value.task.inputtedTranscript.value.length),
+                selection = TextRange(it.task.inputtedTranscript.value.length),
               ),
-              savedTranscript = taskResult.value.task.savedTranscript,
-              submittedTranscript = taskResult.value.task.submittedTranscript,
+              savedTranscript = it.task.savedTranscript,
+              submittedTranscript = it.task.submittedTranscript,
               playBackSpeed = exoAudioPlayer.speed,
-              rejectReason = taskResult.value.task.rejectReason,
+              rejectReason = it.task.rejectReason,
             )
           }
           // wait a second before playing to allow transitions to complete
           delay(1.seconds)
           playPause()
         }
-      }
-      is Err -> reduce { TranscriptTaskState.Error(taskResult.error) }
-    }
+      },
+      failure = { TranscriptTaskState.Error(it) }
+    )
   }
 
   private suspend fun togglePlayBackSpeed() {

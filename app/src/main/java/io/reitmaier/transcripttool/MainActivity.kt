@@ -23,6 +23,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -33,10 +34,10 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.github.michaelbull.result.fold
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import dagger.hilt.android.AndroidEntryPoint
 import io.reitmaier.transcripttool.core.data.TranscriptRepo
 import io.reitmaier.transcripttool.core.data.domain.IncomingContent
@@ -129,9 +130,9 @@ class MainActivity : ComponentActivity() {
       },
     )
     setContent {
-      navController = rememberAnimatedNavController()
+      navController = rememberNavController()
       TranscriptToolTheme {
-        AnimatedNavHost(
+        NavHost(
           navController = navController,
           startDestination = startDestination,
           builder = {
@@ -185,20 +186,21 @@ fun NavGraphBuilder.addTranscriptDetail(
     route = Screen.TranscribeScreen.route + "/{$NAV_ARG_TASK_ID}",
     arguments = Screen.TranscribeScreen.arguments,
     enterTransition = {
+
       slideIntoContainer(
-        AnimatedContentScope.SlideDirection.Start,
+        AnimatedContentTransitionScope.SlideDirection.Start,
         animationSpec = tween(ANIMATION_SPEED),
       )
     },
     exitTransition = {
       slideOutOfContainer(
-        AnimatedContentScope.SlideDirection.End,
+        AnimatedContentTransitionScope.SlideDirection.End,
         animationSpec = tween(ANIMATION_SPEED),
       )
     },
     popEnterTransition = {
       slideIntoContainer(
-        AnimatedContentScope.SlideDirection.End,
+        AnimatedContentTransitionScope.SlideDirection.End,
         animationSpec = tween(ANIMATION_SPEED),
       )
     },
@@ -240,7 +242,7 @@ fun NavGraphBuilder.addTranscriptList(
 //    arguments =  listOf(navArgument(navNewTaskId) { defaultValue = -1 }),
     enterTransition = {
       slideIntoContainer(
-        AnimatedContentScope.SlideDirection.Start,
+        AnimatedContentTransitionScope.SlideDirection.Start,
         animationSpec = tween(
           ANIMATION_SPEED,
         ),
@@ -248,7 +250,7 @@ fun NavGraphBuilder.addTranscriptList(
     },
     exitTransition = {
       slideOutOfContainer(
-        AnimatedContentScope.SlideDirection.Start,
+        AnimatedContentTransitionScope.SlideDirection.Start,
         animationSpec = tween(
           ANIMATION_SPEED,
         ),
@@ -256,7 +258,7 @@ fun NavGraphBuilder.addTranscriptList(
     },
     popEnterTransition = {
       slideIntoContainer(
-        AnimatedContentScope.SlideDirection.End,
+        AnimatedContentTransitionScope.SlideDirection.End,
         animationSpec = tween(ANIMATION_SPEED),
       )
     },
@@ -286,19 +288,19 @@ fun NavGraphBuilder.addNewTranscript(
     arguments = Screen.AddScreen.arguments,
     enterTransition = {
       slideIntoContainer(
-        AnimatedContentScope.SlideDirection.Start,
+        AnimatedContentTransitionScope.SlideDirection.Start,
         animationSpec = tween(ANIMATION_SPEED),
       )
     },
     exitTransition = {
       slideOutOfContainer(
-        AnimatedContentScope.SlideDirection.End,
+        AnimatedContentTransitionScope.SlideDirection.End,
         animationSpec = tween(ANIMATION_SPEED),
       )
     },
     popEnterTransition = {
       slideIntoContainer(
-        AnimatedContentScope.SlideDirection.End,
+        AnimatedContentTransitionScope.SlideDirection.End,
         animationSpec = tween(ANIMATION_SPEED),
       )
     },
@@ -334,7 +336,7 @@ fun NavGraphBuilder.addRegister(
     route = Screen.RegisterScreen.route,
     enterTransition = {
       slideIntoContainer(
-        AnimatedContentScope.SlideDirection.Start,
+        AnimatedContentTransitionScope.SlideDirection.Start,
         animationSpec = tween(
           ANIMATION_SPEED,
         ),
@@ -342,7 +344,7 @@ fun NavGraphBuilder.addRegister(
     },
     exitTransition = {
       slideOutOfContainer(
-        AnimatedContentScope.SlideDirection.Start,
+        AnimatedContentTransitionScope.SlideDirection.Start,
         animationSpec = tween(
           ANIMATION_SPEED,
         ),
@@ -350,7 +352,7 @@ fun NavGraphBuilder.addRegister(
     },
     popEnterTransition = {
       slideIntoContainer(
-        AnimatedContentScope.SlideDirection.End,
+        AnimatedContentTransitionScope.SlideDirection.End,
         animationSpec = tween(ANIMATION_SPEED),
       )
     },

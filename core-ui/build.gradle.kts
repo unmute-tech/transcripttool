@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-@Suppress("DSL_SCOPE_VIOLATION") // Remove when fixed https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.kapt)
   alias(libs.plugins.kotlin.android)
+  alias(libs.plugins.compose.compiler)
 }
 
 val javaVersion: JavaVersion by rootProject.extra
@@ -40,10 +40,6 @@ android {
     buildConfig = false
     renderScript = false
     shaders = false
-  }
-
-  composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.androidxComposeCompiler.get()
   }
 
   compileOptions {

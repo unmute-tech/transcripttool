@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-@Suppress("DSL_SCOPE_VIOLATION") // Remove when fixed https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
@@ -95,6 +94,7 @@ dependencies {
   implementation(libs.kotlin.result)
   implementation(libs.kotlin.result.coroutines)
   implementation(libs.kotlin.retry)
+  implementation(libs.kotlin.retry.result)
 
   // SQLDelight
   implementation(libs.squareup.sqldelight.android.driver)

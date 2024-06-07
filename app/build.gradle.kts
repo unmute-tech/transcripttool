@@ -16,12 +16,12 @@ import java.util.*
  * limitations under the License.
  */
 
-@Suppress("DSL_SCOPE_VIOLATION") // Remove when fixed https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.kapt)
   alias(libs.plugins.hilt.gradle)
+  alias(libs.plugins.compose.compiler)
 }
 
 val javaVersion: JavaVersion by rootProject.extra
@@ -65,10 +65,6 @@ android {
     buildConfig = false
     renderScript = false
     shaders = false
-  }
-
-  composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.androidxComposeCompiler.get()
   }
 
   packagingOptions {
@@ -125,8 +121,8 @@ dependencies {
   implementation(libs.kotlin.result.coroutines)
   implementation(libs.kotlin.retry)
 
-  // accompanist
-  implementation(libs.google.accompanist.navigation.animation)
+  // navigation
+  implementation(libs.androidx.navigation.compose)
 
   // Instrumented tests
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)

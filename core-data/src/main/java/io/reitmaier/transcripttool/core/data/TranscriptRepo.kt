@@ -8,7 +8,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.andThen
-import com.github.michaelbull.result.coroutines.binding.binding
+import com.github.michaelbull.result.coroutines.coroutineBinding
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.map
@@ -333,7 +333,7 @@ class TranscriptRepo @Inject constructor(
   }
 
   suspend fun refreshTasks(): DomainResult<String> {
-    return binding<String, DomainMessage> {
+    return coroutineBinding<String, DomainMessage> {
       val tasks = service.refreshTasks().bind()
       val remoteTasks = tasks.filter { it.provenance == TaskProvenance.REMOTE }
       // TODO Check that everything goes right here

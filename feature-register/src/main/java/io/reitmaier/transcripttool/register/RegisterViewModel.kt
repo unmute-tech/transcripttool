@@ -161,7 +161,7 @@ class RegisterViewModel @Inject constructor(
 
   }
 
-  private fun processViewIntent(viewIntent: ViewIntent) : Unit =
+  private fun processViewIntent(viewIntent: ViewIntent) =
     intent {
       state.let { s ->
         when(s) {
